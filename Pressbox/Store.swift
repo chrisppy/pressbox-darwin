@@ -1,0 +1,367 @@
+// SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
+// SPDX-License-Identifier: MPL-2.0
+
+import BackgroundTasks
+import Foundation
+import LocalAuthentication
+import Observation
+import UIKit
+import UserNotifications
+
+/// App state shared by every view.
+@MainActor
+@Observable
+final class Store {
+  static let refreshTaskID = "org.red-oxide.pressbox.refresh"
+
+  var feeds: [Feed] = []
+  var items: [Item] = []
+  var source: Source? = .all
+  var unreadOnly = true
+  /// Active full-text search; searches include read items.
+  var search: String?
+  var nextOffset: Int?
+  var isLoading = false
+  var errorMessage: String?
+  /// The last load failed for lack of a connection; showing cached data.
+  var isOffline = false
+  /// Full articles opened or prefetched, for offline reading.
+  private(set) var articles: [Int64: Item] = [:]
+
+  // Pairing in progress: the code to show the user.
+  var pairCode: String?
+  var pairStatus: String?
+  private var pairTask: Task<Void, Never>?
+
+  var isLocked = false
+  /// Who this device is signed in as.
+  var me: Me?
+  var serverVersion: ServerVersion?
+
+  var server: String {
+    didSet { UserDefaults.standard.set(server, forKey: "server") }
+  }
+  var token: String {
+    didSet { Keychain.setToken(token) }
+  }
+  var lockEnabled: Bool {
+    didSet { UserDefaults.standard.set(lockEnabled, forKey: "lockEnabled") }
+  }
+  var badgeEnabled: Bool {
+    didSet { UserDefaults.standard.set(badgeEnabled, forKey: "badgeEnabled") }
+  }
+  /// Mark items read as they scroll off the top of the list.
+  var markReadOnScroll: Bool {
+    didSet { UserDefaults.standard.set(markReadOnScroll, forKey: "markReadOnScroll") }
+  }
+
+  init() {
+    server = UserDefaults.standard.string(forKey: "server") ?? ""
+    token = Keychain.token() ?? ""
+    lockEnabled = UserDefaults.standard.bool(forKey: "lockEnabled")
+    badgeEnabled = UserDefaults.standard.bool(forKey: "badgeEnabled")
+    markReadOnScroll = UserDefaults.standard.bool(forKey: "markReadOnScroll")
+    isLocked = lockEnabled
+    if let snapshot = Cache.load() {
+      feeds = snapshot.feeds
+      items = snapshot.items
+      articles = snapshot.articles
+    }
+  }
+
+  var isConfigured: Bool {
+    !server.trimmingCharacters(in: .whitespaces).isEmpty && !token.isEmpty
+  }
+  var totalUnread: Int { feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread } }
+
+  private var api: APIClient { APIClient(server: server, token: token) }
+
+  func title(for source: Source) -> String {
+    switch source {
+    case .all: "All items"
+    case .starred: "Starred"
+    case .feed(let id): feedTitle(id)
+    }
+  }
+
+  func feedTitle(_ id: String) -> String {
+    feeds.first { $0.id == id }?.title ?? id
+  }
+
+  func item(_ id: Int64) -> Item? { items.first { $0.id == id } }
+
+  /// Runs a request, showing any error instead of throwing it.
+  private func run(_ body: () async throws -> Void) async {
+    do {
+      try await body()
+      errorMessage = nil
+      isOffline = false
+    } catch is CancellationError {
+    } catch let error as URLError where error.code == .cancelled {
+    } catch let error as URLError
+      where [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotConnectToHost]
+      .contains(error.code)
+    {
+      isOffline = true
+      errorMessage = nil
+    } catch {
+      errorMessage = error.localizedDescription
+    }
+  }
+
+  private func saveCache() {
+    Cache.save(Snapshot(feeds: feeds, items: items, articles: articles))
+  }
+
+  func reload() async {
+    guard isConfigured else {
+      errorMessage = APIError.notConfigured.errorDescription
+      return
+    }
+    isLoading = true
+    defer { isLoading = false }
+    await run {
+      feeds = try await api.feeds()
+      try await loadItems()
+      if me == nil { me = try await api.me() }
+      // Older servers don't have the endpoint; that's not an error.
+      if serverVersion == nil { serverVersion = try? await api.version() }
+    }
+    updateBadge()
+    saveCache()
+    await prefetchUnread()
+  }
+
+  func loadItems() async throws {
+    guard let source else { return }
+    let page = try await api.items(source: source, unreadOnly: unreadOnly, search: search)
+    items = page.items
+    nextOffset = page.nextOffset
+  }
+
+  func select(_ source: Source?) async {
+    self.source = source
+    items = []
+    await run { try await loadItems() }
+  }
+
+  func setUnreadOnly(_ value: Bool) async {
+    unreadOnly = value
+    await run { try await loadItems() }
+  }
+
+  func setSearch(_ text: String?) async {
+    let text = text?.trimmingCharacters(in: .whitespaces)
+    search = (text?.isEmpty ?? true) ? nil : text
+    await run { try await loadItems() }
+  }
+
+  func loadMoreIfNeeded(after item: Item) async {
+    guard let offset = nextOffset, let source,
+      items.suffix(5).contains(where: { $0.id == item.id })
+    else { return }
+    nextOffset = nil
+    await run {
+      let page = try await api.items(
+        source: source, unreadOnly: unreadOnly, search: search, offset: offset)
+      items.append(contentsOf: page.items)
+      nextOffset = page.nextOffset
+    }
+  }
+
+  /// The full item with content, from the server or the offline cache, and
+  /// marks it read.
+  func open(_ item: Item) async -> Item {
+    var full = articles[item.id] ?? item
+    await run {
+      full = try await api.item(item.id)
+      articles[item.id] = full
+    }
+    await setRead(full, true)
+    full.read = true
+    saveCache()
+    return full
+  }
+
+  /// Downloads the content of unread items not cached yet, so they can be
+  /// read offline.
+  private func prefetchUnread() async {
+    let missing = items.filter { !$0.read && articles[$0.id] == nil }.prefix(30)
+    guard !missing.isEmpty else { return }
+    for item in missing {
+      guard let full = try? await api.item(item.id) else { break }
+      articles[item.id] = full
+    }
+    saveCache()
+  }
+
+  func setRead(_ item: Item, _ value: Bool) async {
+    guard item.read != value else { return }
+    await run {
+      try await api.setRead(item.id, value)
+      update(item.id) { $0.read = value }
+      if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
+        feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
+      }
+    }
+    updateBadge()
+  }
+
+  func setStarred(_ item: Item, _ value: Bool) async {
+    await run {
+      try await api.setStarred(item.id, value)
+      update(item.id) { $0.starred = value }
+    }
+  }
+
+  func markAllRead() async {
+    let targets: [String]
+    switch source {
+    case .feed(let id): targets = [id]
+    case .all: targets = feeds.filter { $0.unread > 0 }.map(\.id)
+    default: return
+    }
+    await run {
+      for id in targets { _ = try await api.markFeedRead(id) }
+    }
+    await reload()
+  }
+
+  func refreshServer() async {
+    await run { try await api.refresh() }
+    try? await Task.sleep(for: .seconds(3))
+    await reload()
+  }
+
+  private func update(_ id: Int64, _ change: (inout Item) -> Void) {
+    for i in items.indices where items[i].id == id { change(&items[i]) }
+    if articles[id] != nil { change(&articles[id]!) }
+  }
+
+  // MARK: Pairing
+
+  /// Asks the server to pair this device and waits for approval.
+  func startPairing(server newServer: String, name: String) {
+    pairTask?.cancel()
+    server = newServer.trimmingCharacters(in: .whitespacesAndNewlines)
+    pairCode = nil
+    pairStatus = "Contacting the server…"
+    let client = APIClient(server: server, token: nil)
+    pairTask = Task {
+      do {
+        let start = try await client.pairStart(name: name)
+        pairCode = start.code
+        pairStatus = "Waiting for approval…"
+        let deadline = Date().addingTimeInterval(TimeInterval(start.expiresIn))
+        while Date() < deadline {
+          try await Task.sleep(for: .seconds(2))
+          if let approved = try await client.pairPoll(start.pollId) {
+            token = approved.token
+            me = nil
+            pairCode = nil
+            pairStatus = "Paired as \(approved.name)."
+            await reload()
+            return
+          }
+        }
+        pairCode = nil
+        pairStatus = "The code expired. Try again."
+      } catch is CancellationError {
+      } catch {
+        pairCode = nil
+        pairStatus = error.localizedDescription
+      }
+    }
+  }
+
+  func cancelPairing() {
+    pairTask?.cancel()
+    pairCode = nil
+    pairStatus = nil
+  }
+
+  /// Approves another device's pairing code, for `user` if given (admins
+  /// only). Returns "device for user" on success.
+  func approve(code: String, user: String? = nil) async -> String? {
+    var result: String?
+    await run {
+      let approved = try await api.approve(code: code, user: user)
+      result = "\(approved.name) for \(approved.user)"
+    }
+    return result
+  }
+
+  func forget() {
+    token = ""
+    me = nil
+    feeds = []
+    items = []
+    articles = [:]
+    Cache.clear()
+  }
+
+  // MARK: Face ID lock
+
+  func lockIfEnabled() {
+    if lockEnabled { isLocked = true }
+  }
+
+  func unlock() async {
+    let context = LAContext()
+    var error: NSError?
+    guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+      // No passcode set: there is nothing to unlock with.
+      isLocked = false
+      return
+    }
+    let ok = try? await context.evaluatePolicy(
+      .deviceOwnerAuthentication, localizedReason: "Unlock your feeds")
+    isLocked = !(ok ?? false)
+  }
+
+  // MARK: Unread badge and background refresh
+
+  func setBadgeEnabled(_ enabled: Bool) async {
+    if enabled {
+      let granted =
+        (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.badge]))
+        ?? false
+      badgeEnabled = granted
+      if !granted { errorMessage = "Allow badges for pressbox in the Settings app." }
+    } else {
+      badgeEnabled = false
+    }
+    updateBadge()
+    Self.scheduleBackgroundRefresh()
+  }
+
+  private func updateBadge() {
+    let count = badgeEnabled ? totalUnread : 0
+    UNUserNotificationCenter.current().setBadgeCount(count)
+  }
+
+  /// Asks iOS to wake the app in a while to update the badge. iOS decides
+  /// when, based on how often the app is used.
+  nonisolated static func scheduleBackgroundRefresh() {
+    guard UserDefaults.standard.bool(forKey: "badgeEnabled") else {
+      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: refreshTaskID)
+      return
+    }
+    let request = BGAppRefreshTaskRequest(identifier: refreshTaskID)
+    request.earliestBeginDate = Date().addingTimeInterval(30 * 60)
+    try? BGTaskScheduler.shared.submit(request)
+  }
+
+  /// The background refresh: fetch unread counts and set the badge.
+  nonisolated static func backgroundRefresh() async {
+    scheduleBackgroundRefresh()
+    let defaults = UserDefaults.standard
+    guard defaults.bool(forKey: "badgeEnabled"),
+      let server = defaults.string(forKey: "server"),
+      let token = Keychain.token(),
+      let feeds = try? await APIClient(server: server, token: token).feeds()
+    else { return }
+    let unread = feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread }
+    try? await UNUserNotificationCenter.current().setBadgeCount(unread)
+  }
+}

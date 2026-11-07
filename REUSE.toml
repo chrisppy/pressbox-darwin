@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
+# SPDX-License-Identifier: MPL-2.0
+
+# Licensing for files that cannot carry a header. See https://reuse.software.
+# The app, build files and docs are MPL-2.0; the app icon artwork is
+# CC-BY-SA-4.0. Each file's own SPDX header says which.
+version = 1
+
+[[annotations]]
+SPDX-FileCopyrightText  = "2026 Chris Palmer <chris@red-oxide.org>"
+SPDX-License-Identifier = "MPL-2.0"
+path                    = ["flake.lock", "Pressbox/Assets.xcassets/**/*.json"]
+
+# Rendered from assets/app-icon.svg.
+[[annotations]]
+SPDX-FileCopyrightText  = "2026 Chris Palmer <chris@red-oxide.org>"
+SPDX-License-Identifier = "CC-BY-SA-4.0"
+path                    = "Pressbox/Assets.xcassets/**/*.png"

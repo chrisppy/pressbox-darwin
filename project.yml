@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
+# SPDX-License-Identifier: MPL-2.0
+
+# XcodeGen spec: run `xcodegen` in this directory to create Pressbox.xcodeproj.
+name: Pressbox
+options:
+  bundleIdPrefix: org.red-oxide
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Set your team here or in Xcode's Signing & Capabilities tab.
+    DEVELOPMENT_TEAM: ""
+targets:
+  Pressbox:
+    type: application
+    platform: iOS
+    sources:
+      - Pressbox
+    # A shared scheme, so `xcodebuild -scheme Pressbox` works in CI.
+    scheme: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.red-oxide.pressbox
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: true
+        # Assets.xcassets/AppIcon.appiconset, rendered from assets/app-icon.svg.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_CFBundleDisplayName: pressbox
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+    info:
+      path: Pressbox/Info.plist
+      properties:
+        # Plain http is allowed only to local addresses (LAN IPs, .local
+        # names). Use https for anything else, e.g. `tailscale serve`.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: pressbox connects to your feed server on the local network.
+        NSFaceIDUsageDescription: pressbox can require Face ID to open your feeds.
+        # Background refresh keeps the unread badge current.
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [org.red-oxide.pressbox.refresh]

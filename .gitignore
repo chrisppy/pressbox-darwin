@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
+# SPDX-License-Identifier: MPL-2.0
+
+# XcodeGen generates these from project.yml.
+*.xcodeproj
+Pressbox/Info.plist
+build/
+result
+result-*
+.direnv

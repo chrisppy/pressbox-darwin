@@ -131,7 +131,8 @@ struct APIClient {
 
   /// Asks the server to pair this device; show the returned code to the user.
   func pairStart(name: String) async throws -> PairStart {
-    try decode(PairStart.self, try await send("POST", "/api/v1/pair", body: PairRequest(name: name)))
+    try decode(
+      PairStart.self, try await send("POST", "/api/v1/pair", body: PairRequest(name: name)))
   }
 
   /// The token once approved, `nil` while still waiting. Throws `.notFound`

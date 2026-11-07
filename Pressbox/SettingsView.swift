@@ -48,7 +48,9 @@ struct SettingsView: View {
           Section {
             Button("Forget this device", role: .destructive) { confirmForget = true }
           } footer: {
-            Text("Removes the token and saved items. Revoke it on the server with `pressboxctl revoke`.")
+            Text(
+              "Removes the token and saved items. Revoke it on the server with `pressboxctl revoke`."
+            )
           }
         } else {
           pairSection
@@ -97,8 +99,10 @@ struct SettingsView: View {
           Text(code)
             .font(.system(size: 40, weight: .bold, design: .monospaced))
             .textSelection(.enabled)
-          Text("Approve it on the server with `pressboxctl approve \(code)`, or from another paired device.")
-            .font(.callout)
+          Text(
+            "Approve it on the server with `pressboxctl approve \(code)`, or from another paired device."
+          )
+          .font(.callout)
         }
         Button("Cancel", role: .cancel) { store.cancelPairing() }
       } else {
@@ -158,7 +162,9 @@ struct SettingsView: View {
     } header: {
       Text("Approve a device")
     } footer: {
-      Text("Enter the code another device shows while pairing. It's added to your account unless you name another user.")
+      Text(
+        "Enter the code another device shows while pairing. It's added to your account unless you name another user."
+      )
     }
   }
 }

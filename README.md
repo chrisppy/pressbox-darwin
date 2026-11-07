@@ -5,10 +5,10 @@ SPDX-License-Identifier: MPL-2.0
 
 # pressbox-ios
 
-The iOS app for [pressbox](https://github.com/chrisppy/pressbox), a
-self-hosted feed reader whose feeds and users are declared in NixOS. It reads
-from your pressbox server over its HTTP API (`/api/v1`) and shares read and
-starred state with the other clients, such as the `pressbox` terminal reader.
+The iOS app for [pressbox](https://github.com/chrisppy/pressbox), a self-hosted
+feed reader whose feeds and users are declared in NixOS. It reads from your
+pressbox server over its HTTP API (`/api/v1`) and shares read and starred state
+with the other clients, such as the `pressbox` terminal reader.
 
 ## Requirements
 
@@ -16,7 +16,8 @@ starred state with the other clients, such as the `pressbox` terminal reader.
 - A pressbox server reachable over HTTPS. iOS only allows plain HTTP to local
   network addresses; `tailscale serve --bg 8470` on the server is the least
   work, and a reverse proxy with ACME works too.
-- To build: a Mac with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
+- To build: a Mac with Xcode and
+  [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ## Building
 
@@ -43,20 +44,18 @@ Settings also has:
 
 - **Approve a device**, for pairing other clients from your phone. Admins can
   approve a device for another user.
-- **Require Face ID**, which locks the app whenever it goes to the
-  background.
-- **Mark as read when scrolled past**, off by default: items are marked read
-  as they scroll off the top of the list while you scroll (not in search
-  results).
+- **Require Face ID**, which locks the app whenever it goes to the background.
+- **Mark as read when scrolled past**, off by default: items are marked read as
+  they scroll off the top of the list while you scroll (not in search results).
 - **Unread count on app icon**, kept current by background refresh.
 
 The Server section shows the address, the signed-in user and device, and the
 server's version.
 
-Search is in the item list. Opened articles, and the content of up to 30
-unread items per refresh, are saved for offline reading. The token is kept in
-the keychain on this device only; it is readable after the first unlock
-(rather than behind Face ID) so the badge can update in the background.
+Search is in the item list. Opened articles, and the content of up to 30 unread
+items per refresh, are saved for offline reading. The token is kept in the
+keychain on this device only; it is readable after the first unlock (rather than
+behind Face ID) so the badge can update in the background.
 
 ## Development
 
@@ -72,9 +71,8 @@ tagged `vX.Y.Z`.
 
 ## License
 
-pressbox-ios is [REUSE](https://reuse.software) compliant; every file states
-its license in an SPDX header (`reuse lint` checks this, also in
-`nix flake check`).
+pressbox-ios is [REUSE](https://reuse.software) compliant; every file states its
+license in an SPDX header (`reuse lint` checks this, also in `nix flake check`).
 
 - The app, build files and docs are licensed under the
   [Mozilla Public License 2.0](LICENSES/MPL-2.0.txt). It keeps changes to its

@@ -10,6 +10,10 @@ feed reader whose feeds and users are declared in NixOS. It reads from your
 pressbox server over its HTTP API (`/api/v1`) and shares read and starred state
 with the other clients, such as the `pressbox` terminal reader.
 
+> [!NOTE]
+> pressbox-ios is in its early days. Expect rough edges, and features and
+> behavior that may change between versions.
+
 ## Requirements
 
 - iOS 18 or later.

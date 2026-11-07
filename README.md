@@ -42,7 +42,9 @@ Set your team under Signing & Capabilities (or `DEVELOPMENT_TEAM` in
 On first launch, enter the server address and tap "Pair this device". The app
 shows a code like `K7W-4QX`: approve it on the server with
 `sudo pressboxctl approve K7W-4QX`, or from a device that is already paired
-(`pressbox approve K7W-4QX`). See pressbox's README for pairing and users.
+(`pressbox approve K7W-4QX`). See pressbox's docs on
+[pairing](https://github.com/chrisppy/pressbox/blob/master/docs/pairing.md) and
+[users](https://github.com/chrisppy/pressbox/blob/master/docs/server.md#users).
 
 Settings also has:
 

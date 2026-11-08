@@ -10,6 +10,11 @@ All notable changes to pressbox-ios. The format follows
 [Semantic Versioning](https://semver.org/). The app is versioned on its own; it
 talks to pressbox servers through API v1 (`/api/v1`).
 
+## [Unreleased]
+
+- Item lists page by cursor, which stays fast far down a long list; older
+  servers without cursors are paged by offset as before.
+
 ## [0.1.0] - 2026-11-07
 
 The first release.

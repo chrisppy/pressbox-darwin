@@ -87,7 +87,7 @@ struct APIClient {
   }
 
   func items(
-    source: Source, unreadOnly: Bool, search: String? = nil, offset: Int? = nil,
+    source: Source, unreadOnly: Bool, search: String? = nil, after next: NextPage? = nil,
     limit: Int = 100
   ) async throws -> ItemPage {
     var query = [URLQueryItem(name: "limit", value: String(limit))]
@@ -101,7 +101,11 @@ struct APIClient {
     } else if unreadOnly && source != .starred {
       query.append(URLQueryItem(name: "unread", value: "true"))
     }
-    if let offset { query.append(URLQueryItem(name: "offset", value: String(offset))) }
+    switch next {
+    case .cursor(let cursor): query.append(URLQueryItem(name: "cursor", value: cursor))
+    case .offset(let offset): query.append(URLQueryItem(name: "offset", value: String(offset)))
+    case nil: break
+    }
     return try decode(ItemPage.self, try await send("GET", "/api/v1/items", query: query))
   }
 

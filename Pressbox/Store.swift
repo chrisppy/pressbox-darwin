@@ -20,7 +20,8 @@ final class Store {
   var unreadOnly = true
   /// Active full-text search; searches include read items.
   var search: String?
-  var nextOffset: Int?
+  /// Where the next page of `items` starts, if there is one.
+  var nextPage: NextPage?
   var isLoading = false
   var errorMessage: String?
   /// The last load failed for lack of a connection; showing cached data.
@@ -136,7 +137,7 @@ final class Store {
     guard let source else { return }
     let page = try await api.items(source: source, unreadOnly: unreadOnly, search: search)
     items = page.items
-    nextOffset = page.nextOffset
+    nextPage = page.next
   }
 
   func select(_ source: Source?) async {
@@ -157,15 +158,15 @@ final class Store {
   }
 
   func loadMoreIfNeeded(after item: Item) async {
-    guard let offset = nextOffset, let source,
+    guard let next = nextPage, let source,
       items.suffix(5).contains(where: { $0.id == item.id })
     else { return }
-    nextOffset = nil
+    nextPage = nil
     await run {
       let page = try await api.items(
-        source: source, unreadOnly: unreadOnly, search: search, offset: offset)
+        source: source, unreadOnly: unreadOnly, search: search, after: next)
       items.append(contentsOf: page.items)
-      nextOffset = page.nextOffset
+      nextPage = page.next
     }
   }
 

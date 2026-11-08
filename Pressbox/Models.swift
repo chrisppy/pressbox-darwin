@@ -40,7 +40,17 @@ struct Item: Codable, Identifiable, Hashable {
 
 struct ItemPage: Codable {
   let items: [Item]
+  let nextCursor: String?
+  /// Only from servers too old to give cursors.
   let nextOffset: Int?
+
+  var next: NextPage? { nextCursor.map(NextPage.cursor) ?? nextOffset.map(NextPage.offset) }
+}
+
+/// Where the next page of items starts.
+enum NextPage: Equatable {
+  case cursor(String)
+  case offset(Int)
 }
 
 struct Flag: Codable {

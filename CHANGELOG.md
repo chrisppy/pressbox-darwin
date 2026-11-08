@@ -12,11 +12,11 @@ talks to pressbox servers through API v1 (`/api/v1`).
 
 ## [Unreleased]
 
-- Birdland colors throughout: Orioles orange as the tint, Birdland
-  backgrounds and text in dark mode and Birdland Light in light mode, brass
-  stars, a Camden green read action, and article text and links in the same
-  palette. The colors are color sets in `Assets.xcassets`, and `Theme.swift`
-  maps them to their uses.
+- Birdland colors throughout: Orioles orange as the tint, Birdland backgrounds
+  and text in dark mode and Birdland Light in light mode, brass stars, a Camden
+  green read action, and article text and links in the same palette. The colors
+  are color sets in `Assets.xcassets`, and `Theme.swift` maps them to their
+  uses.
 - Item lists page by cursor, which stays fast far down a long list; older
   servers without cursors are paged by offset as before.
 - Liquid Glass on iOS 26: the offline and error banners float as glass capsules,

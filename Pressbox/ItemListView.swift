@@ -80,25 +80,24 @@ struct ItemListView: View {
           .statusBanner(tint: .red)
       }
     }
-    .toolbar {
-      ToolbarItemGroup(placement: .topBarTrailing) {
-        Menu {
-          Picker(
-            "Show",
-            selection: Binding(
-              get: { store.unreadOnly },
-              set: { value in Task { await store.setUnreadOnly(value) } })
-          ) {
-            Text("Unread").tag(true)
-            Text("All").tag(false)
-          }
-          Button("Mark all as read", systemImage: "checkmark.circle") {
-            Task { await store.markAllRead() }
-          }
-          .disabled(store.source == .starred)
-        } label: {
-          Label("Options", systemImage: "line.3.horizontal.decrease.circle")
+    .bottomControls(search: true) {
+      Button("Mark all as read", systemImage: "checkmark.circle") {
+        Task { await store.markAllRead() }
+      }
+      .disabled(store.source == .starred || store.items.isEmpty)
+    } trailing: {
+      Menu {
+        Picker(
+          "Show",
+          selection: Binding(
+            get: { store.unreadOnly },
+            set: { value in Task { await store.setUnreadOnly(value) } })
+        ) {
+          Text("Unread").tag(true)
+          Text("All").tag(false)
         }
+      } label: {
+        Label("Show", systemImage: "line.3.horizontal.decrease.circle")
       }
     }
   }

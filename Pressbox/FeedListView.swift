@@ -54,16 +54,13 @@ struct FeedListView: View {
     .onChange(of: store.source) { _, source in
       Task { await store.select(source) }
     }
-    .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        Button("Settings", systemImage: "gear") { showSettings = true }
+    .bottomControls {
+      Button("Settings", systemImage: "gear") { showSettings = true }
+    } trailing: {
+      Button("Refresh feeds", systemImage: "arrow.clockwise") {
+        Task { await store.refreshServer() }
       }
-      ToolbarItem(placement: .topBarTrailing) {
-        Button("Refresh feeds", systemImage: "arrow.clockwise") {
-          Task { await store.refreshServer() }
-        }
-        .disabled(store.isLoading)
-      }
+      .disabled(store.isLoading)
     }
   }
 }

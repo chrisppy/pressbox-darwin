@@ -15,6 +15,38 @@ extension View {
     modifier(StatusBanner(tint: tint))
   }
 
+  /// The screen's controls in the bottom toolbar, in two clusters at either
+  /// end, within thumb reach. On iOS 26 each cluster is its own glass group,
+  /// and with `search` the search field sits between them; before that the
+  /// field stays at the top.
+  @ViewBuilder func bottomControls<Leading: View, Trailing: View>(
+    search: Bool = false,
+    @ViewBuilder leading: () -> Leading,
+    @ViewBuilder trailing: () -> Trailing
+  ) -> some View {
+    let leading = leading()
+    let trailing = trailing()
+    if #available(iOS 26, *) {
+      toolbar {
+        ToolbarItemGroup(placement: .bottomBar) { leading }
+        if search {
+          DefaultToolbarItem(kind: .search, placement: .bottomBar)
+        } else {
+          ToolbarSpacer(.flexible, placement: .bottomBar)
+        }
+        ToolbarItemGroup(placement: .bottomBar) { trailing }
+      }
+    } else {
+      toolbar {
+        ToolbarItemGroup(placement: .bottomBar) {
+          leading
+          Spacer()
+          trailing
+        }
+      }
+    }
+  }
+
   /// The main action on a screen.
   @ViewBuilder func prominentButtonStyle() -> some View {
     if #available(iOS 26, *) {

@@ -27,32 +27,24 @@ struct ArticleView: View {
       full = nil
       full = await store.open(item)
     }
-    .toolbar {
-      ToolbarItemGroup(placement: .topBarTrailing) {
-        Button(
-          current.starred ? "Unstar" : "Star",
-          systemImage: current.starred ? "star.fill" : "star"
-        ) {
-          Task { await store.setStarred(current, !current.starred) }
-        }
-        Button(
-          current.read ? "Mark unread" : "Mark read",
-          systemImage: current.read ? "circle" : "circle.fill"
-        ) {
-          Task { await store.setRead(current, !current.read) }
-        }
+    .bottomControls {
+      Button(
+        current.starred ? "Unstar" : "Star",
+        systemImage: current.starred ? "star.fill" : "star"
+      ) {
+        Task { await store.setStarred(current, !current.starred) }
       }
+      Button(
+        current.read ? "Mark unread" : "Mark read",
+        systemImage: current.read ? "circle" : "circle.fill"
+      ) {
+        Task { await store.setRead(current, !current.read) }
+      }
+    } trailing: {
       if let link = current.link {
-        // Liquid Glass: the item's state and leaving the app get separate
-        // glass groups.
-        if #available(iOS 26, *) {
-          ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        }
-        ToolbarItemGroup(placement: .topBarTrailing) {
-          ShareLink(item: link)
-          Link(destination: link) {
-            Label("Open in Safari", systemImage: "safari")
-          }
+        ShareLink(item: link)
+        Link(destination: link) {
+          Label("Open in Safari", systemImage: "safari")
         }
       }
     }

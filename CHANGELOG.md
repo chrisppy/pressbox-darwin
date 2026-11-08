@@ -19,6 +19,10 @@ talks to pressbox servers through API v1 (`/api/v1`).
   splits into two glass groups. Navigation bars, toolbars, search and the
   sidebar pick it up from the system. iOS 18 looks as before. Building now needs
   Xcode 26.
+- Controls are in a bottom toolbar, within thumb reach: Settings and Refresh
+  under the feeds; Mark all as read, search and the Unread/All filter under the
+  items (search moves down on iOS 26); star, read, share and Safari under an
+  article.
 
 ## [0.1.0] - 2026-11-07
 

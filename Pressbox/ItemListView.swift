@@ -72,16 +72,12 @@ struct ItemListView: View {
       if store.isOffline {
         Label("Offline: showing saved items", systemImage: "wifi.slash")
           .font(.footnote)
-          .padding(10)
-          .frame(maxWidth: .infinity)
-          .background(.thinMaterial)
+          .statusBanner()
       } else if let message = store.errorMessage {
         Text(message)
           .font(.footnote)
           .foregroundStyle(.white)
-          .padding(10)
-          .frame(maxWidth: .infinity)
-          .background(.red.gradient)
+          .statusBanner(tint: .red)
       }
     }
     .toolbar {

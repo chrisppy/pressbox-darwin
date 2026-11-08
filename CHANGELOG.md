@@ -14,6 +14,11 @@ talks to pressbox servers through API v1 (`/api/v1`).
 
 - Item lists page by cursor, which stays fast far down a long list; older
   servers without cursors are paged by offset as before.
+- Liquid Glass on iOS 26: the offline and error banners float as glass
+  capsules, the Unlock and Approve buttons use glass styles, and the article
+  toolbar splits into two glass groups. Navigation bars, toolbars, search and
+  the sidebar pick it up from the system. iOS 18 looks as before. Building now
+  needs Xcode 26.
 
 ## [0.1.0] - 2026-11-07
 

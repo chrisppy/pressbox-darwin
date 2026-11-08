@@ -41,7 +41,14 @@ struct ArticleView: View {
         ) {
           Task { await store.setRead(current, !current.read) }
         }
-        if let link = current.link {
+      }
+      if let link = current.link {
+        // Liquid Glass: the item's state and leaving the app get separate
+        // glass groups.
+        if #available(iOS 26, *) {
+          ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+        ToolbarItemGroup(placement: .topBarTrailing) {
           ShareLink(item: link)
           Link(destination: link) {
             Label("Open in Safari", systemImage: "safari")

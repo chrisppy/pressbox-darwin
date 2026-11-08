@@ -14,7 +14,8 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # macOS 26 ships Xcode 26: the iOS 26 SDK is needed for Liquid Glass.
+    runs-on: macos-26
 
     steps:
       - name: Checkout repository

@@ -20,7 +20,7 @@ with the other clients, such as the `pressbox` terminal reader.
 - A pressbox server reachable over HTTPS. iOS only allows plain HTTP to local
   network addresses; `tailscale serve --bg 8470` on the server is the least
   work, and a reverse proxy with ACME works too.
-- To build: a Mac with Xcode and
+- To build: a Mac with Xcode 26 or later and
   [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ## Building

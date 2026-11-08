@@ -23,15 +23,31 @@ struct ContentView: View {
   @Environment(\.scenePhase) private var scenePhase
   @State private var selectedItem: Item.ID?
   @State private var showSettings = false
+  @Environment(\.horizontalSizeClass) private var sizeClass
+
+  /// The split view's columns are stacked, one screen at a time, so each
+  /// screen gets Back (and Home) in its bottom toolbar. Clearing a column's
+  /// selection pops back to it.
+  private var stacked: Bool { sizeClass == .compact }
 
   var body: some View {
     NavigationSplitView {
       FeedListView(showSettings: $showSettings)
     } content: {
       ItemListView(selection: $selectedItem)
+        .environment(\.navigation, stacked ? Navigation(back: { store.source = nil }) : nil)
     } detail: {
       if let id = selectedItem, let item = store.item(id) {
         ArticleView(item: item)
+          .environment(
+            \.navigation,
+            stacked
+              ? Navigation(
+                back: { selectedItem = nil },
+                home: {
+                  selectedItem = nil
+                  store.source = nil
+                }) : nil)
       } else {
         ContentUnavailableView("No item selected", systemImage: "doc.text")
       }

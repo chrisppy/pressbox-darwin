@@ -85,7 +85,6 @@ struct ItemListView: View {
         Task { await store.markAllRead() }
       }
       .disabled(store.source == .starred || store.items.isEmpty)
-    } trailing: {
       Menu {
         Picker(
           "Show",

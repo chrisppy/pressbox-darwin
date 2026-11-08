@@ -40,7 +40,6 @@ struct ArticleView: View {
       ) {
         Task { await store.setRead(current, !current.read) }
       }
-    } trailing: {
       if let link = current.link {
         ShareLink(item: link)
         Link(destination: link) {

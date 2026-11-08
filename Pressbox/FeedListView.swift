@@ -56,7 +56,6 @@ struct FeedListView: View {
     }
     .bottomControls {
       Button("Settings", systemImage: "gear") { showSettings = true }
-    } trailing: {
       Button("Refresh feeds", systemImage: "arrow.clockwise") {
         Task { await store.refreshServer() }
       }

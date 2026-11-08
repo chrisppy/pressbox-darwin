@@ -26,7 +26,7 @@ struct FeedListView: View {
               Text(feed.title)
               if let error = feed.lastError {
                 Image(systemName: "exclamationmark.triangle.fill")
-                  .foregroundStyle(.red)
+                  .foregroundStyle(Theme.error)
                   .accessibilityLabel("Last fetch failed: \(error)")
               }
             }
@@ -49,6 +49,7 @@ struct FeedListView: View {
         }
       }
     }
+    .themedScreen()
     .navigationTitle("pressbox")
     .refreshable { await store.reload() }
     .onChange(of: store.source) { _, source in

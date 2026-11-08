@@ -50,6 +50,8 @@ struct ContentView: View {
                 }) : nil)
       } else {
         ContentUnavailableView("No item selected", systemImage: "doc.text")
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .themedScreen()
       }
     }
     .sheet(isPresented: $showSettings) {

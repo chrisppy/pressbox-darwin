@@ -22,6 +22,8 @@ struct ArticleView: View {
         ProgressView()
       }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .themedScreen()
     .navigationBarTitleDisplayMode(.inline)
     .task(id: item.id) {
       full = nil
@@ -73,14 +75,15 @@ struct ArticleView: View {
       <meta http-equiv="Content-Security-Policy" content="script-src 'none'">
       <style>
         :root { color-scheme: light dark; }
+        \(Theme.articleCSS)
         body { font: -apple-system-body; line-height: 1.5; margin: 20px; max-width: 42em;
-               word-wrap: break-word; }
+               word-wrap: break-word; color: var(--text); }
         h1 { font: -apple-system-title1; font-weight: 700; line-height: 1.2; margin: 0 0 6px; }
         h1 a { color: inherit; text-decoration: none; }
-        .meta { color: gray; font: -apple-system-footnote; margin-bottom: 20px; }
+        .meta { color: var(--muted); font: -apple-system-footnote; margin-bottom: 20px; }
         img, video, iframe { max-width: 100%; height: auto; }
         pre { overflow-x: auto; }
-        a { color: #e0782f; }
+        a { color: var(--link); }
       </style></head>
       <body><h1>\(title)</h1><div class="meta">\(meta)</div>\(body)</body></html>
       """

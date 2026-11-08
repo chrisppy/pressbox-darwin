@@ -23,7 +23,7 @@ struct ItemListView: View {
             ) {
               Task { await store.setRead(item, !item.read) }
             }
-            .tint(.blue)
+            .tint(Theme.read)
           }
           .swipeActions(edge: .trailing) {
             Button(
@@ -32,7 +32,7 @@ struct ItemListView: View {
             ) {
               Task { await store.setStarred(item, !item.starred) }
             }
-            .tint(.yellow)
+            .tint(Theme.star)
           }
           .onAppear {
             visible.insert(item.id)
@@ -45,6 +45,7 @@ struct ItemListView: View {
       }
     }
     .listStyle(.plain)
+    .themedScreen()
     .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
     .navigationTitle(store.source.map(store.title(for:)) ?? "")
     .searchable(text: $query, prompt: "Search titles and text")
@@ -77,7 +78,7 @@ struct ItemListView: View {
         Text(message)
           .font(.footnote)
           .foregroundStyle(.white)
-          .statusBanner(tint: .red)
+          .statusBanner(tint: Theme.error)
       }
     }
     .bottomControls(search: true) {
@@ -131,7 +132,7 @@ struct ItemRow: View {
           .lineLimit(1)
         Spacer()
         if item.starred {
-          Image(systemName: "star.fill").foregroundStyle(.yellow)
+          Image(systemName: "star.fill").foregroundStyle(Theme.star)
         }
         Text(item.publishedDate, format: .relative(presentation: .numeric))
       }

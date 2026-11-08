@@ -57,10 +57,11 @@ struct SettingsView: View {
         }
         if let message = store.errorMessage {
           Section {
-            Text(message).foregroundStyle(.red)
+            Text(message).foregroundStyle(Theme.error)
           }
         }
       }
+      .themedScreen()
       .navigationTitle("Settings")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

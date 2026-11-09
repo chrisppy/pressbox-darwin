@@ -95,6 +95,7 @@ struct APIClient {
     case .all: break
     case .starred: query.append(URLQueryItem(name: "starred", value: "true"))
     case .feed(let id): query.append(URLQueryItem(name: "feed", value: id))
+    case .tag(let tag): query.append(URLQueryItem(name: "tag", value: tag))
     }
     if let search, !search.isEmpty {
       query.append(URLQueryItem(name: "q", value: search))

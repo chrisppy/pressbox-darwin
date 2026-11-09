@@ -75,6 +75,20 @@ final class Store {
   }
   var totalUnread: Int { feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread } }
 
+  /// Tags of the feeds in the server's config, sorted.
+  var tags: [String] {
+    Set(feeds.filter { !$0.isArchived }.flatMap(\.tags)).sorted()
+  }
+
+  /// Feeds in the server's config with this tag.
+  func feedsTagged(_ tag: String) -> [Feed] {
+    feeds.filter { !$0.isArchived && $0.tags.contains(tag) }
+  }
+
+  func unread(tagged tag: String) -> Int {
+    feedsTagged(tag).reduce(0) { $0 + $1.unread }
+  }
+
   private var api: APIClient { APIClient(server: server, token: token) }
 
   func title(for source: Source) -> String {
@@ -82,6 +96,7 @@ final class Store {
     case .all: "All items"
     case .starred: "Starred"
     case .feed(let id): feedTitle(id)
+    case .tag(let tag): tag
     }
   }
 
@@ -219,6 +234,7 @@ final class Store {
     let targets: [String]
     switch source {
     case .feed(let id): targets = [id]
+    case .tag(let tag): targets = feedsTagged(tag).filter { $0.unread > 0 }.map(\.id)
     case .all: targets = feeds.filter { $0.unread > 0 }.map(\.id)
     default: return
     }

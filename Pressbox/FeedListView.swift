@@ -19,6 +19,16 @@ struct FeedListView: View {
           Label("Starred", systemImage: "star")
         }
       }
+      if !store.tags.isEmpty {
+        Section("Tags") {
+          ForEach(store.tags, id: \.self) { tag in
+            NavigationLink(value: Source.tag(tag)) {
+              Label(tag, systemImage: "tag")
+            }
+            .badge(store.unread(tagged: tag))
+          }
+        }
+      }
       Section("Feeds") {
         ForEach(store.feeds.filter { !$0.isArchived }) { feed in
           NavigationLink(value: Source.feed(feed.id)) {

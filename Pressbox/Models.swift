@@ -111,4 +111,6 @@ enum Source: Hashable, Codable {
   case all
   case starred
   case feed(String)
+  /// Every feed with this tag (the server's `tags`, or folders from OPML).
+  case tag(String)
 }

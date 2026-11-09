@@ -12,6 +12,7 @@ talks to pressbox servers through API v1 (`/api/v1`).
 
 ## [Unreleased]
 
+- Item lists show their title small and inline instead of as a large title.
 - Birdland colors throughout: Orioles orange as the tint, Birdland backgrounds
   and text in dark mode and Birdland Light in light mode, brass stars, a Camden
   green read action, and article text and links in the same palette. The colors

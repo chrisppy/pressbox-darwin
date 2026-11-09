@@ -12,9 +12,9 @@ talks to pressbox servers through API v1 (`/api/v1`).
 
 ## [Unreleased]
 
-- Tags: the feed list has a Tags section, one row per tag in the server's
-  config with its unread count, showing the items of every feed with that tag.
-  Mark all as read works there too.
+- Tags: the feed list has a Tags section, one row per tag in the server's config
+  with its unread count, showing the items of every feed with that tag. Mark all
+  as read works there too.
 - Item lists show their title small and inline instead of as a large title.
 - Birdland colors throughout: Orioles orange as the tint, Birdland backgrounds
   and text in dark mode and Birdland Light in light mode, brass stars, a Camden

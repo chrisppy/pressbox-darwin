@@ -7,7 +7,7 @@ struct SettingsView: View {
   @Environment(Store.self) private var store
   @Environment(\.dismiss) private var dismiss
   @State private var server = ""
-  @State private var deviceName = UIDevice.current.name
+  @State private var deviceName = Self.defaultDeviceName
   @State private var manualToken = ""
   @State private var approveCode = ""
   @State private var approveUser = ""
@@ -33,7 +33,7 @@ struct SettingsView: View {
           }
           approveSection
           Section {
-            Toggle("Require Face ID", isOn: $store.lockEnabled)
+            Toggle(Self.lockLabel, isOn: $store.lockEnabled)
             Toggle("Mark as read when scrolled past", isOn: $store.markReadOnScroll)
             Toggle(
               "Unread count on app icon",
@@ -41,9 +41,7 @@ struct SettingsView: View {
                 get: { store.badgeEnabled },
                 set: { value in Task { await store.setBadgeEnabled(value) } }))
           } footer: {
-            Text(
-              "Scrolled past means off the top of the list while you scroll. The badge is updated in the background from time to time; iOS decides how often."
-            )
+            Text(Self.optionsFooter)
           }
           Section {
             Button("Forget this device", role: .destructive) { confirmForget = true }
@@ -63,13 +61,19 @@ struct SettingsView: View {
       }
       .themedScreen()
       .navigationTitle("Settings")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) {
-          Button("Done") { dismiss() }
-            .disabled(!store.isConfigured)
+      #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done") { dismiss() }
+              .disabled(!store.isConfigured)
+          }
         }
-      }
+      #else
+        // The Settings window: closing it is Done.
+        .formStyle(.grouped)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 480)
+      #endif
       .confirmationDialog("Forget this device?", isPresented: $confirmForget) {
         Button("Forget", role: .destructive) { store.forget() }
       }
@@ -82,10 +86,7 @@ struct SettingsView: View {
   @ViewBuilder private var pairSection: some View {
     Section {
       TextField("https://rss.example.org", text: $server)
-        .keyboardType(.URL)
-        .textContentType(.URL)
-        .textInputAutocapitalization(.never)
-        .autocorrectionDisabled()
+        .urlEntry()
       TextField("Device name", text: $deviceName)
     } header: {
       Text("Connect to pressbox")
@@ -119,8 +120,7 @@ struct SettingsView: View {
     Section {
       DisclosureGroup("Use a token instead") {
         SecureField("Token from pressboxctl add-device", text: $manualToken)
-          .textInputAutocapitalization(.never)
-          .autocorrectionDisabled()
+          .plainEntry()
         Button("Use token") {
           store.server = server.trimmingCharacters(in: .whitespacesAndNewlines)
           store.token = manualToken.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -138,8 +138,7 @@ struct SettingsView: View {
     Section {
       HStack {
         TextField("Code, e.g. K7W-4QX", text: $approveCode)
-          .textInputAutocapitalization(.characters)
-          .autocorrectionDisabled()
+          .codeEntry()
           .font(.body.monospaced())
         Button("Approve") {
           Task {
@@ -155,8 +154,7 @@ struct SettingsView: View {
       }
       if store.me?.admin == true {
         TextField("For user (blank: you)", text: $approveUser)
-          .textInputAutocapitalization(.never)
-          .autocorrectionDisabled()
+          .plainEntry()
       }
       if let approveStatus {
         Text(approveStatus).foregroundStyle(.secondary)
@@ -168,5 +166,64 @@ struct SettingsView: View {
         "Enter the code another device shows while pairing. It's added to your account unless you name another user."
       )
     }
+  }
+}
+
+extension SettingsView {
+  fileprivate static var defaultDeviceName: String {
+    #if os(macOS)
+      Host.current().localizedName ?? "Mac"
+    #else
+      UIDevice.current.name
+    #endif
+  }
+
+  #if os(macOS)
+    fileprivate static let lockLabel = "Require Touch ID"
+    fileprivate static let optionsFooter =
+      "Scrolled past means off the top of the list while you scroll. The Dock badge is updated every 15 minutes while pressbox is open."
+  #else
+    fileprivate static let lockLabel = "Require Face ID"
+    fileprivate static let optionsFooter =
+      "Scrolled past means off the top of the list while you scroll. The badge is updated in the background from time to time; iOS decides how often."
+  #endif
+}
+
+// Keyboard hints for the text fields. The Mac has no on-screen keyboard or
+// auto-capitalization, so there they only turn off autocorrection.
+extension View {
+  /// A server address.
+  fileprivate func urlEntry() -> some View {
+    #if os(iOS)
+      self
+        .keyboardType(.URL)
+        .textContentType(.URL)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+    #else
+      self.autocorrectionDisabled()
+    #endif
+  }
+
+  /// A token or user name, typed as is.
+  fileprivate func plainEntry() -> some View {
+    #if os(iOS)
+      self
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+    #else
+      self.autocorrectionDisabled()
+    #endif
+  }
+
+  /// A pairing code, in capitals.
+  fileprivate func codeEntry() -> some View {
+    #if os(iOS)
+      self
+        .textInputAutocapitalization(.characters)
+        .autocorrectionDisabled()
+    #else
+      self.autocorrectionDisabled()
+    #endif
   }
 }

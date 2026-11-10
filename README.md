@@ -3,22 +3,22 @@ SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
 SPDX-License-Identifier: MPL-2.0
 -->
 
-# pressbox-ios
+# pressbox-darwin
 
-The iOS app for [pressbox](https://github.com/chrisppy/pressbox), a self-hosted
+The iPhone, iPad and Mac app for [pressbox](https://github.com/chrisppy/pressbox), a self-hosted
 feed reader whose feeds and users are declared in NixOS. It reads from your
 pressbox server over its HTTP API (`/api/v1`) and shares read and starred state
 with the other clients, such as the `pressbox` terminal reader.
 
 > [!NOTE]
-> pressbox-ios is in its early days. Expect rough edges, and features and
+> pressbox-darwin is in its early days. Expect rough edges, and features and
 > behavior that may change between versions.
 
 ## Requirements
 
-- iOS 18 or later.
+- iOS 18 or later on iPhone and iPad, or macOS 15 or later on a Mac.
 - A pressbox server reachable over HTTPS. iOS only allows plain HTTP to local
-  network addresses; `tailscale serve --bg 8470` on the server is the least
+  network addresses (the same goes for macOS); `tailscale serve --bg 8470` on the server is the least
   work, and a reverse proxy with ACME works too.
 - To build: a Mac with Xcode 26 or later and
   [XcodeGen](https://github.com/yonaskolb/XcodeGen).
@@ -26,7 +26,8 @@ with the other clients, such as the `pressbox` terminal reader.
 ## Building
 
 The repo holds an XcodeGen spec (`project.yml`) and the SwiftUI sources
-(`Pressbox/`); the Xcode project is generated, not committed.
+(`Pressbox/`); the Xcode project is generated, not committed. One target builds
+for iPhone, iPad and Mac; platform differences are `#if os(macOS)` blocks.
 
 ```sh
 nix develop    # provides xcodegen on macOS, or: brew install xcodegen
@@ -34,8 +35,10 @@ just open      # xcodegen, then open Pressbox.xcodeproj
 ```
 
 Set your team under Signing & Capabilities (or `DEVELOPMENT_TEAM` in
-`project.yml`) and run it. CI builds the app for the simulator on every change
-(`.github/workflows/ios.yml`); `just build` does the same locally.
+`project.yml`), pick an iOS device, a simulator or My Mac, and run it. CI builds
+the app for the iOS simulator and for macOS on every change
+(`.github/workflows/apple.yml`); `just build` does the same locally
+(`just build-ios` or `just build-mac` for one).
 
 ## Using it
 
@@ -50,10 +53,15 @@ Settings also has:
 
 - **Approve a device**, for pairing other clients from your phone. Admins can
   approve a device for another user.
-- **Require Face ID**, which locks the app whenever it goes to the background.
+- **Require Face ID** (Touch ID on Mac), which locks the app whenever it goes to
+  the background (on Mac: when it's hidden or its window is minimized).
 - **Mark as read when scrolled past**, off by default: items are marked read as
   they scroll off the top of the list while you scroll (not in search results).
-- **Unread count on app icon**, kept current by background refresh.
+- **Unread count on app icon**, kept current by background refresh (on Mac, in
+  the Dock, reloaded every 15 minutes while the app is open).
+
+On Mac, Settings is in the app menu (⌘,), Reload is ⌘R and Refresh Feeds on
+Server is ⇧⌘R, and each column's buttons are in the window toolbar.
 
 The Server section shows the address, the signed-in user and device, and the
 server's version.
@@ -77,7 +85,7 @@ tagged `vX.Y.Z`.
 
 ## License
 
-pressbox-ios is [REUSE](https://reuse.software) compliant; every file states its
+pressbox-darwin is [REUSE](https://reuse.software) compliant; every file states its
 license in an SPDX header (`reuse lint` checks this, also in `nix flake check`).
 
 - The app, build files and docs are licensed under the

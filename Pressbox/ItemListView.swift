@@ -48,7 +48,9 @@ struct ItemListView: View {
     .themedScreen()
     .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
     .navigationTitle(store.source.map(store.title(for:)) ?? "")
-    .navigationBarTitleDisplayMode(.inline)
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
     .searchable(text: $query, prompt: "Search titles and text")
     .onSubmit(of: .search) {
       Task { await store.setSearch(query) }

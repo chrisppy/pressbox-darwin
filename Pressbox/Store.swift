@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
 // SPDX-License-Identifier: MPL-2.0
 
-import BackgroundTasks
 import Foundation
 import LocalAuthentication
 import Observation
-import UIKit
 import UserNotifications
+
+#if os(iOS)
+  import BackgroundTasks
+  import UIKit
+#endif
 
 /// App state shared by every view.
 @MainActor
@@ -317,7 +320,7 @@ final class Store {
     Cache.clear()
   }
 
-  // MARK: Face ID lock
+  // MARK: Face ID (Touch ID on Mac) lock
 
   func lockIfEnabled() {
     if lockEnabled { isLocked = true }
@@ -344,7 +347,7 @@ final class Store {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.badge]))
         ?? false
       badgeEnabled = granted
-      if !granted { errorMessage = "Allow badges for pressbox in the Settings app." }
+      if !granted { errorMessage = Self.allowBadgesMessage }
     } else {
       badgeEnabled = false
     }
@@ -357,16 +360,26 @@ final class Store {
     UNUserNotificationCenter.current().setBadgeCount(count)
   }
 
+  #if os(macOS)
+    private static let allowBadgesMessage =
+      "Allow badges for pressbox in System Settings › Notifications."
+  #else
+    private static let allowBadgesMessage = "Allow badges for pressbox in the Settings app."
+  #endif
+
   /// Asks iOS to wake the app in a while to update the badge. iOS decides
-  /// when, based on how often the app is used.
+  /// when, based on how often the app is used. The Mac app has no background
+  /// refresh; it reloads on a timer while open instead (see `ContentView`).
   nonisolated static func scheduleBackgroundRefresh() {
-    guard UserDefaults.standard.bool(forKey: "badgeEnabled") else {
-      BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: refreshTaskID)
-      return
-    }
-    let request = BGAppRefreshTaskRequest(identifier: refreshTaskID)
-    request.earliestBeginDate = Date().addingTimeInterval(30 * 60)
-    try? BGTaskScheduler.shared.submit(request)
+    #if os(iOS)
+      guard UserDefaults.standard.bool(forKey: "badgeEnabled") else {
+        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: refreshTaskID)
+        return
+      }
+      let request = BGAppRefreshTaskRequest(identifier: refreshTaskID)
+      request.earliestBeginDate = Date().addingTimeInterval(30 * 60)
+      try? BGTaskScheduler.shared.submit(request)
+    #endif
   }
 
   /// The background refresh: fetch unread counts and set the badge.

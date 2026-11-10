@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import SwiftUI
-import UIKit
 
 // Birdland colors, from https://github.com/chrisppy/base24-themes: Birdland in
 // dark mode, Birdland Light in light mode. Each color is a color set in
@@ -30,10 +29,11 @@ enum Theme {
   /// `--muted` and `--link`. The page background stays transparent so the
   /// view's background shows through.
   static var articleCSS: String {
-    func vars(_ style: UIUserInterfaceStyle) -> String {
-      let traits = UITraitCollection(userInterfaceStyle: style)
+    func vars(_ scheme: ColorScheme) -> String {
+      var environment = EnvironmentValues()
+      environment.colorScheme = scheme
       func hex(_ name: String) -> String {
-        UIColor(named: name)?.resolvedColor(with: traits).hexString ?? "inherit"
+        Color(name).resolve(in: environment).hexString ?? "inherit"
       }
       let text = hex("Text")
       let muted = hex("MutedText")
@@ -58,14 +58,15 @@ extension View {
   }
 }
 
-extension UIColor {
-  /// `#rrggbb`, for CSS.
-  fileprivate var hexString: String {
-    var r: CGFloat = 0
-    var g: CGFloat = 0
-    var b: CGFloat = 0
-    getRed(&r, green: &g, blue: &b, alpha: nil)
+extension Color.Resolved {
+  /// `#rrggbb`, for CSS. `Color.Resolved` holds linear values, so this goes
+  /// through `cgColor` to get the gamma-encoded sRGB that CSS expects.
+  fileprivate var hexString: String? {
+    guard let sRGB = CGColorSpace(name: CGColorSpace.sRGB),
+      let color = cgColor.converted(to: sRGB, intent: .defaultIntent, options: nil),
+      let c = color.components, c.count >= 3
+    else { return nil }
     let channel = { (v: CGFloat) in Int((min(max(v, 0), 1) * 255).rounded()) }
-    return String(format: "#%02x%02x%02x", channel(r), channel(g), channel(b))
+    return String(format: "#%02x%02x%02x", channel(c[0]), channel(c[1]), channel(c[2]))
   }
 }

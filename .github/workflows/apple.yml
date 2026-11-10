@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
 # SPDX-License-Identifier: MPL-2.0
 
-name: iOS
+name: Apple
 
 on:
   push:
@@ -14,7 +14,13 @@ permissions:
 
 jobs:
   build:
-    # macOS 26 ships Xcode 26: the iOS 26 SDK is needed for Liquid Glass.
+    strategy:
+      fail-fast: false
+      matrix:
+        destination: ['generic/platform=iOS Simulator', 'generic/platform=macOS']
+    name: build (${{ matrix.destination }})
+    # macOS 26 ships Xcode 26: the iOS and macOS 26 SDKs are needed for
+    # Liquid Glass.
     runs-on: macos-26
 
     steps:
@@ -27,12 +33,12 @@ jobs:
       - name: Generate the Xcode project
         run: xcodegen
 
-      - name: Build for the simulator (no signing)
+      - name: Build (no signing)
         run: |
           xcodebuild build \
             -project Pressbox.xcodeproj \
             -scheme Pressbox \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination '${{ matrix.destination }}' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
             | tee build.log

@@ -7,6 +7,7 @@ options:
   bundleIdPrefix: org.red-oxide
   deploymentTarget:
     iOS: "18.0"
+    macOS: "15.0"
   createIntermediateGroups: true
 settings:
   base:
@@ -18,7 +19,10 @@ settings:
 targets:
   Pressbox:
     type: application
-    platform: iOS
+    # One target for iPhone, iPad and Mac: SwiftUI throughout, with
+    # `#if os(macOS)` where the platforms differ.
+    platform: auto
+    supportedDestinations: [iOS, macOS]
     sources:
       - Pressbox
     # A shared scheme, so `xcodebuild -scheme Pressbox` works in CI.
@@ -33,9 +37,15 @@ targets:
         # Assets.xcassets/AccentColor.colorset: Orioles orange, from Birdland.
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_CFBundleDisplayName: pressbox
-        INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.news
+        # iPhone and iPad only.
+        "INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphone*]": true
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations[sdk=iphone*]": UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        "INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*]": UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        # Mac only: the App Sandbox (with outgoing connections, for the
+        # server) and the hardened runtime.
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Config/macOS.entitlements
+        "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": true
     info:
       path: Pressbox/Info.plist
       properties:
@@ -45,6 +55,7 @@ targets:
           NSAllowsLocalNetworking: true
         NSLocalNetworkUsageDescription: pressbox connects to your feed server on the local network.
         NSFaceIDUsageDescription: pressbox can require Face ID to open your feeds.
-        # Background refresh keeps the unread badge current.
+        # Background refresh keeps the unread badge current (iOS; the Mac
+        # app refreshes on a timer while it is open).
         UIBackgroundModes: [fetch]
         BGTaskSchedulerPermittedIdentifiers: [org.red-oxide.pressbox.refresh]

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 {
-  description = "pressbox-ios: the iOS app for the pressbox feed reader";
+  description = "pressbox-darwin: the iPhone, iPad and Mac app for the pressbox feed reader";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";

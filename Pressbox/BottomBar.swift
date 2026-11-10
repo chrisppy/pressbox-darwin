@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import SwiftUI
-import UIKit
 
-// Every screen's controls live in a bottom toolbar, within thumb reach,
-// including Back and Home where the navigation bar would have them.
+#if os(iOS)
+  import UIKit
+#endif
+
+// On iPhone and iPad every screen's controls live in a bottom toolbar, within
+// thumb reach, including Back and Home where the navigation bar would have
+// them. On Mac they go in the window toolbar, above their column.
 
 /// Leaving a screen from its bottom toolbar. Only set where the split view's
 /// columns are stacked (iPhone, or a narrow iPad window); side by side,
@@ -40,29 +44,44 @@ private struct BottomControls<Buttons: View>: ViewModifier {
   let buttons: Buttons
 
   @ViewBuilder func body(content: Content) -> some View {
-    let screen = content.navigationBarBackButtonHidden(navigation != nil)
-    if #available(iOS 26, *) {
-      screen
+    #if os(macOS)
+      // Columns are always side by side on Mac, so there is no Back or Home,
+      // and `.searchable` puts its field in the toolbar by itself.
+      content
         .toolbar {
-          ToolbarSpacer(.flexible, placement: .bottomBar)
-          ToolbarItemGroup(placement: .bottomBar) { allButtons }
-          if search {
-            DefaultToolbarItem(kind: .search, placement: .bottomBar)
-          }
-          ToolbarSpacer(.flexible, placement: .bottomBar)
+          ToolbarItemGroup(placement: .primaryAction) { buttons }
         }
-        .searchToolbarBehavior(.minimize)
-    } else {
-      screen
-        .toolbar {
-          ToolbarItemGroup(placement: .bottomBar) {
-            Spacer()
-            allButtons
-            Spacer()
-          }
-        }
-    }
+    #else
+      iOSBody(content: content)
+    #endif
   }
+
+  #if os(iOS)
+    @ViewBuilder private func iOSBody(content: Content) -> some View {
+      let screen = content.navigationBarBackButtonHidden(navigation != nil)
+      if #available(iOS 26, *) {
+        screen
+          .toolbar {
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItemGroup(placement: .bottomBar) { allButtons }
+            if search {
+              DefaultToolbarItem(kind: .search, placement: .bottomBar)
+            }
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+          }
+          .searchToolbarBehavior(.minimize)
+      } else {
+        screen
+          .toolbar {
+            ToolbarItemGroup(placement: .bottomBar) {
+              Spacer()
+              allButtons
+              Spacer()
+            }
+          }
+      }
+    }
+  #endif
 
   @ViewBuilder private var allButtons: some View {
     navigationButtons
@@ -79,15 +98,17 @@ private struct BottomControls<Buttons: View>: ViewModifier {
   }
 }
 
-/// Keeps swipe-from-the-edge going back on screens whose navigation-bar Back
-/// button is hidden, which otherwise turns the gesture off.
-extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
-  override open func viewDidLoad() {
-    super.viewDidLoad()
-    interactivePopGestureRecognizer?.delegate = self
-  }
+#if os(iOS)
+  /// Keeps swipe-from-the-edge going back on screens whose navigation-bar Back
+  /// button is hidden, which otherwise turns the gesture off.
+  extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+      super.viewDidLoad()
+      interactivePopGestureRecognizer?.delegate = self
+    }
 
-  public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-    viewControllers.count > 1
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+      viewControllers.count > 1
+    }
   }
-}
+#endif

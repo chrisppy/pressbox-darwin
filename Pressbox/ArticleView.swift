@@ -24,7 +24,9 @@ struct ArticleView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .themedScreen()
-    .navigationBarTitleDisplayMode(.inline)
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
     .task(id: item.id) {
       full = nil
       full = await store.open(item)
@@ -45,11 +47,17 @@ struct ArticleView: View {
       if let link = current.link {
         ShareLink(item: link)
         Link(destination: link) {
-          Label("Open in Safari", systemImage: "safari")
+          Label(Self.openInBrowser, systemImage: "safari")
         }
       }
     }
   }
+
+  #if os(macOS)
+    private static let openInBrowser = "Open in Browser"
+  #else
+    private static let openInBrowser = "Open in Safari"
+  #endif
 
   private static func escape(_ s: String) -> String {
     s.replacingOccurrences(of: "&", with: "&amp;")
@@ -90,27 +98,37 @@ struct ArticleView: View {
   }
 }
 
-/// Renders article HTML with JavaScript off; links open in Safari.
-struct HTMLView: UIViewRepresentable {
+/// Renders article HTML with JavaScript off; links open in the default
+/// browser (Safari on iPhone and iPad).
+@MainActor
+struct HTMLView {
   let html: String
   let baseURL: URL?
 
   func makeCoordinator() -> Coordinator { Coordinator() }
 
-  func makeUIView(context: Context) -> WKWebView {
+  private func makeWebView(coordinator: Coordinator) -> WKWebView {
     let config = WKWebViewConfiguration()
     config.defaultWebpagePreferences.allowsContentJavaScript = false
-    config.dataDetectorTypes = [.link]
+    #if os(iOS)
+      config.dataDetectorTypes = [.link]
+    #endif
     let view = WKWebView(frame: .zero, configuration: config)
-    view.navigationDelegate = context.coordinator
-    view.isOpaque = false
-    view.backgroundColor = .clear
+    view.navigationDelegate = coordinator
+    // A transparent page, so the screen's background shows through.
+    #if os(macOS)
+      view.setValue(false, forKey: "drawsBackground")
+      view.underPageBackgroundColor = .clear
+    #else
+      view.isOpaque = false
+      view.backgroundColor = .clear
+    #endif
     return view
   }
 
-  func updateUIView(_ view: WKWebView, context: Context) {
-    guard context.coordinator.loaded != html else { return }
-    context.coordinator.loaded = html
+  private func update(_ view: WKWebView, coordinator: Coordinator) {
+    guard coordinator.loaded != html else { return }
+    coordinator.loaded = html
     view.loadHTMLString(html, baseURL: baseURL)
   }
 
@@ -124,8 +142,34 @@ struct HTMLView: UIViewRepresentable {
       guard action.navigationType == .linkActivated, let url = action.request.url else {
         return .allow
       }
-      await UIApplication.shared.open(url)
+      #if os(macOS)
+        NSWorkspace.shared.open(url)
+      #else
+        await UIApplication.shared.open(url)
+      #endif
       return .cancel
     }
   }
 }
+
+#if os(macOS)
+  extension HTMLView: NSViewRepresentable {
+    func makeNSView(context: Context) -> WKWebView {
+      makeWebView(coordinator: context.coordinator)
+    }
+
+    func updateNSView(_ view: WKWebView, context: Context) {
+      update(view, coordinator: context.coordinator)
+    }
+  }
+#else
+  extension HTMLView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+      makeWebView(coordinator: context.coordinator)
+    }
+
+    func updateUIView(_ view: WKWebView, context: Context) {
+      update(view, coordinator: context.coordinator)
+    }
+  }
+#endif

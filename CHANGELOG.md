@@ -5,13 +5,21 @@ SPDX-License-Identifier: MPL-2.0
 
 # Changelog
 
-All notable changes to pressbox-ios. The format follows
+All notable changes to pressbox-darwin (formerly pressbox-ios). The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/). The app is versioned on its own; it
 talks to pressbox servers through API v1 (`/api/v1`).
 
 ## [Unreleased]
 
+- A Mac app (macOS 15 or later) from the same target and sources as the iPhone
+  and iPad app, and the repository is renamed pressbox-darwin. On Mac the
+  controls are in the window toolbar, search is in the title bar, Settings is
+  its own window (⌘,), Reload is ⌘R, links open in the default browser, and
+  the lock uses Touch ID. With no background refresh on macOS, the app reloads
+  every 15 minutes while open to keep the Dock badge current. The app runs in
+  the App Sandbox and keeps its token in the data protection keychain. CI
+  builds both platforms.
 - Tags: the feed list has a Tags section, one row per tag in the server's config
   with its unread count, showing the items of every feed with that tag. Mark all
   as read works there too.

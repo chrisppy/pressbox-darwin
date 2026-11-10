@@ -3,7 +3,8 @@
 
 import SwiftUI
 
-// Liquid Glass on iOS 26, and the look the app had before on iOS 18. System
+// Liquid Glass on iOS and macOS 26, and the look the app had before on
+// iOS 18 and macOS 15. System
 // parts (navigation bars, toolbars, the search field, sidebars, sheets) turn
 // to glass on their own when built with the iOS 26 SDK; these cover the
 // app's own surfaces.
@@ -17,7 +18,7 @@ extension View {
 
   /// The main action on a screen.
   @ViewBuilder func prominentButtonStyle() -> some View {
-    if #available(iOS 26, *) {
+    if #available(iOS 26, macOS 26, *) {
       buttonStyle(.glassProminent)
     } else {
       buttonStyle(.borderedProminent)
@@ -26,7 +27,7 @@ extension View {
 
   /// A secondary action set apart from the text beside it.
   @ViewBuilder func secondaryButtonStyle() -> some View {
-    if #available(iOS 26, *) {
+    if #available(iOS 26, macOS 26, *) {
       buttonStyle(.glass)
     } else {
       buttonStyle(.bordered)
@@ -38,7 +39,7 @@ private struct StatusBanner: ViewModifier {
   let tint: Color?
 
   @ViewBuilder func body(content: Content) -> some View {
-    if #available(iOS 26, *) {
+    if #available(iOS 26, macOS 26, *) {
       content
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -58,7 +59,7 @@ private struct StatusBanner: ViewModifier {
     }
   }
 
-  @available(iOS 26, *)
+  @available(iOS 26, macOS 26, *)
   private var glass: Glass {
     if let tint { .regular.tint(tint) } else { .regular }
   }

@@ -65,5 +65,5 @@ The first release.
 - Face ID lock, unread badge with background refresh, and mark as read on scroll
   (off by default).
 
-[2026.11.0]: https://github.com/chrisppy/pressbox-darwin/compare/v0.1.0...v2026.11.0
 [0.1.0]: https://github.com/chrisppy/pressbox-ios/releases/tag/v0.1.0
+[2026.11.0]: https://github.com/chrisppy/pressbox-darwin/compare/v0.1.0...v2026.11.0

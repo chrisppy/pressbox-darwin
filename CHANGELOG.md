@@ -5,30 +5,30 @@ SPDX-License-Identifier: MPL-2.0
 
 # Changelog
 
-All notable changes to pressbox-darwin (formerly pressbox-ios). The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
-[Semantic Versioning](https://semver.org/). The app is versioned on its own; it
-talks to pressbox servers through API v1 (`/api/v1`).
+All notable changes to pressbox-darwin (formerly pressbox-ios). The format
+follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
+follow [Semantic Versioning](https://semver.org/). The app is versioned on its
+own; it talks to pressbox servers through API v1 (`/api/v1`).
 
 ## [Unreleased]
 
 - A Mac app (macOS 15 or later) from the same target and sources as the iPhone
   and iPad app, and the repository is renamed pressbox-darwin. On Mac the
   controls are in the window toolbar, search is in the title bar, Settings is
-  its own window (⌘,), Reload is ⌘R, links open in the default browser, and
-  the lock uses Touch ID. With no background refresh on macOS, the app reloads
-  every 15 minutes while open to keep the Dock badge current. The app runs in
-  the App Sandbox and keeps its token in the data protection keychain. CI
-  builds both platforms.
+  its own window (⌘,), Reload is ⌘R, links open in the default browser, and the
+  lock uses Touch ID. With no background refresh on macOS, the app reloads every
+  15 minutes while open to keep the Dock badge current. The app runs in the App
+  Sandbox and keeps its token in the data protection keychain. CI builds both
+  platforms.
 - Podcasts (needs a pressbox server with podcast support): episodes play with
   AVPlayer, resume where any client left off (the position syncs every 15
-  seconds and on pause and stop) and are marked read when played to the end.
-  A mini player above every screen's controls opens a full player with
-  scrubbing, 10/30-second skips, chapters, speeds that keep the pitch, AirPlay
-  and the transcript, which follows along. Audio plays in the background with
-  Lock Screen and Control Center controls (on Mac, Now Playing and the media
-  keys); video plays inline, full screen or in picture in picture. Opening an
-  episode no longer marks it read.
+  seconds and on pause and stop) and are marked read when played to the end. A
+  mini player above every screen's controls opens a full player with scrubbing,
+  10/30-second skips, chapters, speeds that keep the pitch, AirPlay and the
+  transcript, which follows along. Audio plays in the background with Lock
+  Screen and Control Center controls (on Mac, Now Playing and the media keys);
+  video plays inline, full screen or in picture in picture. Opening an episode
+  no longer marks it read.
 - Tags: the feed list has a Tags section, one row per tag in the server's config
   with its unread count, showing the items of every feed with that tag. Mark all
   as read works there too.

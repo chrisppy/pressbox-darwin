@@ -17,7 +17,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        destination: ['generic/platform=iOS Simulator', 'generic/platform=macOS']
+        destination: [
+          "generic/platform=iOS Simulator",
+          "generic/platform=macOS",
+        ]
     name: build (${{ matrix.destination }})
     # macOS 26 ships Xcode 26: the iOS and macOS 26 SDKs are needed for
     # Liquid Glass.

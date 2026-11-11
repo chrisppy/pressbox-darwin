@@ -12,11 +12,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1794254352,
-        "narHash": "sha256-z3JpPftiIhoUSbK8uP+K7HGRiAhaUXY671eQyomrQQ0=",
+        "lastModified": 1794420676,
+        "narHash": "sha256-DWDQ94t6s9OckFPQVM0pwE6xijQbgIrePE4TRT5FRjw=",
         "owner": "chrisppy",
         "repo": "devfmt",
-        "rev": "e3fdc9879ecfd9394889159bbffad10d5a5362b7",
+        "rev": "8f415aacda7166e3cc9b1774298417b755f58106",
         "type": "github"
       },
       "original": {

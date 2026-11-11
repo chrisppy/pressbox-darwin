@@ -5,10 +5,11 @@ SPDX-License-Identifier: MPL-2.0
 
 # pressbox-darwin
 
-The iPhone, iPad and Mac app for [pressbox](https://github.com/chrisppy/pressbox), a self-hosted
-feed reader whose feeds and users are declared in NixOS. It reads from your
-pressbox server over its HTTP API (`/api/v1`) and shares read and starred state
-with the other clients, such as the `pressbox` terminal reader.
+The iPhone, iPad and Mac app for
+[pressbox](https://github.com/chrisppy/pressbox), a self-hosted feed reader
+whose feeds and users are declared in NixOS. It reads from your pressbox server
+over its HTTP API (`/api/v1`) and shares read and starred state with the other
+clients, such as the `pressbox` terminal reader.
 
 > [!NOTE]
 > pressbox-darwin is in its early days. Expect rough edges, and features and
@@ -18,8 +19,8 @@ with the other clients, such as the `pressbox` terminal reader.
 
 - iOS 18 or later on iPhone and iPad, or macOS 15 or later on a Mac.
 - A pressbox server reachable over HTTPS. iOS only allows plain HTTP to local
-  network addresses (the same goes for macOS); `tailscale serve --bg 8470` on the server is the least
-  work, and a reverse proxy with ACME works too.
+  network addresses (the same goes for macOS); `tailscale serve --bg 8470` on
+  the server is the least work, and a reverse proxy with ACME works too.
 - To build: a Mac with Xcode 26 or later and
   [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
@@ -75,13 +76,13 @@ chapters and transcript. Opening an episode doesn't mark it read; playing it to
 the end (or stopping in its last 30 seconds) does.
 
 While an episode plays, a bar sits above the controls of every screen; tap it
-for the full player: artwork (the chapter's, when it has one), a scrubber,
-back 10 / forward 30 seconds, previous and next chapter, the speed (1× to 2×,
-and 0.75×, keeping the pitch), AirPlay, the chapter list and the transcript,
-which follows along and jumps where you tap. Audio keeps playing in the
-background and shows on the Lock Screen and in Control Center, whose buttons
-and headphones work too (on Mac, in Control Center's Now Playing and on the
-media keys); video plays in the player, full screen or in picture in picture.
+for the full player: artwork (the chapter's, when it has one), a scrubber, back
+10 / forward 30 seconds, previous and next chapter, the speed (1× to 2×, and
+0.75×, keeping the pitch), AirPlay, the chapter list and the transcript, which
+follows along and jumps where you tap. Audio keeps playing in the background and
+shows on the Lock Screen and in Control Center, whose buttons and headphones
+work too (on Mac, in Control Center's Now Playing and on the media keys); video
+plays in the player, full screen or in picture in picture.
 
 The position is saved on the server every 15 seconds and when you pause or stop,
 so playback resumes where you left off here or in any other pressbox client.
@@ -105,8 +106,9 @@ tagged `vX.Y.Z`.
 
 ## License
 
-pressbox-darwin is [REUSE](https://reuse.software) compliant; every file states its
-license in an SPDX header (`reuse lint` checks this, also in `nix flake check`).
+pressbox-darwin is [REUSE](https://reuse.software) compliant; every file states
+its license in an SPDX header (`reuse lint` checks this, also in
+`nix flake check`).
 
 - The app, build files and docs are licensed under the
   [Mozilla Public License 2.0](LICENSES/MPL-2.0.txt). It keeps changes to its

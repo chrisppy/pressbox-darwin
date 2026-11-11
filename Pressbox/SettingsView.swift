@@ -66,7 +66,7 @@ struct SettingsView: View {
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") { dismiss() }
-              .disabled(!store.isConfigured)
+            .disabled(!store.isConfigured)
           }
         }
       #else

@@ -56,6 +56,7 @@ targets:
         NSLocalNetworkUsageDescription: pressbox connects to your feed server on the local network.
         NSFaceIDUsageDescription: pressbox can require Face ID to open your feeds.
         # Background refresh keeps the unread badge current (iOS; the Mac
-        # app refreshes on a timer while it is open).
-        UIBackgroundModes: [fetch]
+        # app refreshes on a timer while it is open). Audio keeps podcasts
+        # playing (and video in picture in picture) in the background.
+        UIBackgroundModes: [fetch, audio]
         BGTaskSchedulerPermittedIdentifiers: [org.red-oxide.pressbox.refresh]

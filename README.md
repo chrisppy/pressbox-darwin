@@ -66,6 +66,26 @@ Server is ⇧⌘R, and each column's buttons are in the window toolbar.
 The Server section shows the address, the signed-in user and device, and the
 server's version.
 
+### Podcasts
+
+Podcast episodes (items with audio or video) show a waveform in the list, a
+half-filled circle once started, and a speaker while playing. Their article has
+Play (or "Resume from 12:34"), Video when there is one, and buttons for the
+chapters and transcript. Opening an episode doesn't mark it read; playing it to
+the end (or stopping in its last 30 seconds) does.
+
+While an episode plays, a bar sits above the controls of every screen; tap it
+for the full player: artwork (the chapter's, when it has one), a scrubber,
+back 10 / forward 30 seconds, previous and next chapter, the speed (1× to 2×,
+and 0.75×, keeping the pitch), AirPlay, the chapter list and the transcript,
+which follows along and jumps where you tap. Audio keeps playing in the
+background and shows on the Lock Screen and in Control Center, whose buttons
+and headphones work too (on Mac, in Control Center's Now Playing and on the
+media keys); video plays in the player, full screen or in picture in picture.
+
+The position is saved on the server every 15 seconds and when you pause or stop,
+so playback resumes where you left off here or in any other pressbox client.
+
 Search is in the item list. Opened articles, and the content of up to 30 unread
 items per refresh, are saved for offline reading. The token is kept in the
 keychain on this device only; it is readable after the first unlock (rather than

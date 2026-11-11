@@ -122,6 +122,30 @@ struct APIClient {
     _ = try await send("PUT", "/api/v1/items/\(id)/starred", body: Flag(value: value))
   }
 
+  /// Saves where playback of an item's media stopped, in seconds.
+  func setPosition(_ id: Int64, _ position: Int) async throws {
+    _ = try await send("PUT", "/api/v1/items/\(id)/position", body: Position(position: position))
+  }
+
+  /// An item's chapters; none if it has no chapters file.
+  func chapters(_ id: Int64) async throws -> [Chapter] {
+    do {
+      return try decode(Chapters.self, try await send("GET", "/api/v1/items/\(id)/chapters"))
+        .chapters
+    } catch APIError.notFound {
+      return []
+    }
+  }
+
+  /// An item's transcript; `nil` if it has none.
+  func transcript(_ id: Int64) async throws -> Transcript? {
+    do {
+      return try decode(Transcript.self, try await send("GET", "/api/v1/items/\(id)/transcript"))
+    } catch APIError.notFound {
+      return nil
+    }
+  }
+
   func markFeedRead(_ feed: String) async throws -> Int {
     let id = feed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? feed
     let data = try await send("POST", "/api/v1/feeds/\(id)/read-all")

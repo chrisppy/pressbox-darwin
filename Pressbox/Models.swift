@@ -18,6 +18,10 @@ struct Feed: Codable, Identifiable, Hashable {
   let lastError: String?
   /// Removed from the server config but kept for its starred items.
   let archived: Bool?
+  /// The feed's artwork.
+  let image: String?
+  /// `podcast:medium`: `podcast`, `music`, `video`, ...
+  let medium: String?
 
   var isArchived: Bool { archived ?? false }
 }
@@ -33,9 +37,91 @@ struct Item: Codable, Identifiable, Hashable {
   let published: Int64
   var read: Bool
   var starred: Bool
+  /// Audio or video (a podcast episode), if any.
+  let media: Media?
+  /// Where this user stopped playing it, in seconds; absent when 0.
+  var position: Int?
 
   var publishedDate: Date { Date(timeIntervalSince1970: TimeInterval(published)) }
   var link: URL? { url.flatMap(URL.init(string:)) }
+  var isEpisode: Bool { media != nil }
+  var resumeAt: Int { position ?? 0 }
+}
+
+/// An item's audio and video, from its enclosures and the Podcasting 2.0
+/// tags.
+struct Media: Codable, Hashable {
+  /// The feed's own enclosure first, then `podcast:alternateEnclosure`s.
+  let enclosures: [Enclosure]
+  /// Seconds.
+  let duration: Int?
+  let image: String?
+  let season: Int?
+  let episode: Int?
+  /// The chapters file; read it through `APIClient.chapters`.
+  let chapters: String?
+  let transcripts: [TranscriptFile]?
+
+  var video: Enclosure? { enclosures.first(where: \.isVideo) }
+  /// The first that isn't video, else the video.
+  var audio: Enclosure? { enclosures.first { !$0.isVideo } ?? video }
+  var hasTranscript: Bool { !(transcripts ?? []).isEmpty }
+}
+
+struct Enclosure: Codable, Hashable {
+  let url: String
+  let mime: String?
+  let length: Int64?
+  let bitrate: Int?
+  let height: Int?
+  let title: String?
+
+  var isVideo: Bool { mime?.hasPrefix("video/") ?? false }
+}
+
+struct TranscriptFile: Codable, Hashable {
+  let url: String
+  let mime: String
+  let lang: String?
+  let rel: String?
+}
+
+/// Body of `PUT /api/v1/items/{id}/position`.
+struct Position: Codable {
+  let position: Int
+}
+
+/// `GET /api/v1/items/{id}/chapters`.
+struct Chapters: Codable {
+  let chapters: [Chapter]
+}
+
+struct Chapter: Codable, Hashable, Identifiable {
+  /// Seconds from the start.
+  let start: Double
+  let end: Double?
+  let title: String?
+  let image: String?
+  let url: String?
+  /// Only changes the artwork; left out of chapter lists.
+  let hidden: Bool?
+
+  var id: Double { start }
+  var isHidden: Bool { hidden ?? false }
+}
+
+/// `GET /api/v1/items/{id}/transcript`.
+struct Transcript: Codable {
+  let segments: [Segment]
+}
+
+struct Segment: Codable, Hashable, Identifiable {
+  let start: Double
+  let end: Double
+  let speaker: String?
+  let text: String
+
+  var id: Double { start }
 }
 
 struct ItemPage: Codable {

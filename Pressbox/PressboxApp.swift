@@ -94,6 +94,10 @@ struct ContentView: View {
           .themedScreen()
       }
     }
+    // The episode playing, over every screen's controls.
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      MiniPlayer()
+    }
     .settings(isPresented: $showSettings)
     .overlay {
       if store.isLocked {

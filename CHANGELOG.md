@@ -20,6 +20,15 @@ talks to pressbox servers through API v1 (`/api/v1`).
   every 15 minutes while open to keep the Dock badge current. The app runs in
   the App Sandbox and keeps its token in the data protection keychain. CI
   builds both platforms.
+- Podcasts (needs a pressbox server with podcast support): episodes play with
+  AVPlayer, resume where any client left off (the position syncs every 15
+  seconds and on pause and stop) and are marked read when played to the end.
+  A mini player above every screen's controls opens a full player with
+  scrubbing, 10/30-second skips, chapters, speeds that keep the pitch, AirPlay
+  and the transcript, which follows along. Audio plays in the background with
+  Lock Screen and Control Center controls (on Mac, Now Playing and the media
+  keys); video plays inline, full screen or in picture in picture. Opening an
+  episode no longer marks it read.
 - Tags: the feed list has a Tags section, one row per tag in the server's config
   with its unread count, showing the items of every feed with that tag. Mark all
   as read works there too.

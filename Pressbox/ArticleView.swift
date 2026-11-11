@@ -13,14 +13,20 @@ struct ArticleView: View {
   private var current: Item { store.item(item.id) ?? item }
 
   var body: some View {
-    Group {
-      if let full {
-        HTMLView(
-          html: Self.page(for: full, feedTitle: store.feedTitle(full.feedId)),
-          baseURL: full.link)
-      } else {
-        ProgressView()
+    VStack(spacing: 0) {
+      if current.isEpisode {
+        EpisodeHeader(item: current)
       }
+      Group {
+        if let full {
+          HTMLView(
+            html: Self.page(for: full, feedTitle: store.feedTitle(full.feedId)),
+            baseURL: full.link)
+        } else {
+          ProgressView()
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .themedScreen()

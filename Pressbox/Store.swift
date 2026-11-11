@@ -37,6 +37,9 @@ final class Store {
   var pairStatus: String?
   private var pairTask: Task<Void, Never>?
 
+  /// Plays podcast episodes.
+  let playback = Playback()
+
   var isLocked = false
   /// Who this device is signed in as.
   var me: Me?
@@ -71,6 +74,7 @@ final class Store {
       items = snapshot.items
       articles = snapshot.articles
     }
+    playback.store = self
   }
 
   var isConfigured: Bool {
@@ -189,17 +193,47 @@ final class Store {
   }
 
   /// The full item with content, from the server or the offline cache, and
-  /// marks it read.
+  /// marks it read, unless it is a podcast episode: those are read once
+  /// played to the end.
   func open(_ item: Item) async -> Item {
     var full = articles[item.id] ?? item
     await run {
       full = try await api.item(item.id)
       articles[item.id] = full
     }
-    await setRead(full, true)
-    full.read = true
+    if !full.isEpisode {
+      await setRead(full, true)
+      full.read = true
+    }
     saveCache()
     return full
+  }
+
+  // MARK: Podcasts
+
+  /// An episode's chapters; none if it has none or they can't be had.
+  func chapters(for item: Item) async -> [Chapter] {
+    (try? await api.chapters(item.id)) ?? []
+  }
+
+  /// An episode's transcript, or `nil`.
+  func transcript(for item: Item) async -> Transcript? {
+    var transcript: Transcript?
+    await run { transcript = try await api.transcript(item.id) }
+    return transcript
+  }
+
+  /// Saves where playback stopped, here and on the server.
+  func savePosition(_ item: Item, _ position: Int) async {
+    update(item.id) { $0.position = position }
+    await run { try await api.setPosition(item.id, position) }
+  }
+
+  /// An episode played to the end: read, and its position forgotten.
+  func finished(_ item: Item) async {
+    await savePosition(item, 0)
+    let current = self.item(item.id) ?? articles[item.id] ?? item
+    await setRead(current, true)
   }
 
   /// Downloads the content of unread items not cached yet, so they can be
@@ -312,6 +346,7 @@ final class Store {
   }
 
   func forget() {
+    playback.discard()
     token = ""
     me = nil
     feeds = []

@@ -122,8 +122,16 @@ extension ItemListView {
 }
 
 struct ItemRow: View {
+  @Environment(Store.self) private var store
   let item: Item
   let feedTitle: String
+
+  /// Playing, started, or an episode not started yet.
+  private var episodeSymbol: String? {
+    guard item.isEpisode else { return nil }
+    if store.playback.isCurrent(item) { return "speaker.wave.2.fill" }
+    return item.resumeAt > 0 ? "circle.lefthalf.filled" : "waveform"
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
@@ -134,6 +142,9 @@ struct ItemRow: View {
         Text(feedTitle)
           .lineLimit(1)
         Spacer()
+        if let episodeSymbol {
+          Image(systemName: episodeSymbol).foregroundStyle(Color.accentColor)
+        }
         if item.starred {
           Image(systemName: "star.fill").foregroundStyle(Theme.star)
         }

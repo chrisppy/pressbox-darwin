@@ -100,9 +100,10 @@ just fmt       # swift-format and the other formatters (devfmt's treefmt setup)
 just verify    # check formatting, then nix flake check (formatting, reuse lint)
 ```
 
-Changes are recorded in [CHANGELOG.md](CHANGELOG.md). A release bumps
-`MARKETING_VERSION` (and `CURRENT_PROJECT_VERSION`) in `project.yml` and is
-tagged `vX.Y.Z`.
+Changes are recorded in [CHANGELOG.md](CHANGELOG.md). Versions are calendar
+versions, `YYYY.M.PATCH` (2026.11.0, then 2026.11.1, 2026.12.0). A release sets
+`MARKETING_VERSION` in `project.yml` to it and `CURRENT_PROJECT_VERSION` to the
+same as digits, `YYYYMMPP` (20261100), and is tagged `vYYYY.M.PATCH`.
 
 ## License
 

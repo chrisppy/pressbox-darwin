@@ -12,8 +12,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    # Calendar versions, YYYY.M.PATCH (see CHANGELOG.md). The build number is
+    # the same as digits, YYYYMMPP, so it always increases.
+    MARKETING_VERSION: "2026.11.0"
+    CURRENT_PROJECT_VERSION: "20261100"
     # Set your team here or in Xcode's Signing & Capabilities tab.
     DEVELOPMENT_TEAM: ""
 targets:

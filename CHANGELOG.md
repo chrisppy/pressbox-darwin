@@ -7,10 +7,12 @@ SPDX-License-Identifier: MPL-2.0
 
 All notable changes to pressbox-darwin (formerly pressbox-ios). The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
-follow [Semantic Versioning](https://semver.org/). The app is versioned on its
-own; it talks to pressbox servers through API v1 (`/api/v1`).
+are [calendar versions](https://calver.org/), `YYYY.M.PATCH`: the year and month
+of the release, then a count that starts at 0 each month (2026.11.0, 2026.11.1,
+2026.12.0). The app is versioned on its own; it talks to pressbox servers
+through API v1 (`/api/v1`).
 
-## [Unreleased]
+## [2026.11.0] - Unreleased
 
 - A Mac app (macOS 15 or later) from the same target and sources as the iPhone
   and iPad app, and the repository is renamed pressbox-darwin. On Mac the
@@ -63,4 +65,5 @@ The first release.
 - Face ID lock, unread badge with background refresh, and mark as read on scroll
   (off by default).
 
+[2026.11.0]: https://github.com/chrisppy/pressbox-darwin/compare/v0.1.0...v2026.11.0
 [0.1.0]: https://github.com/chrisppy/pressbox-ios/releases/tag/v0.1.0

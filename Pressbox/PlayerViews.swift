@@ -15,11 +15,15 @@ struct EpisodeHeader: View {
   private var playback: Playback { store.playback }
   private var media: Media? { item.media }
   private var current: Item { store.item(item.id) ?? item }
-  private var playingAudio: Bool { playback.isCurrent(item) && !playback.isVideo }
+  /// Play plays whatever is downloaded: the video, if that is what was
+  /// saved; otherwise the audio (from the file, or streamed).
+  private var playsVideo: Bool { Playback.downloadedVideo(item) }
+  /// Playing (or paused) the way Play plays it, or the way Video does.
+  private var playingPlay: Bool { playback.isCurrent(item) && playback.isVideo == playsVideo }
   private var playingVideo: Bool { playback.isCurrent(item) && playback.isVideo }
 
   private var playLabel: String {
-    if playingAudio { return playback.isPlaying ? "Pause" : "Resume" }
+    if playingPlay { return playback.isPlaying ? "Pause" : "Resume" }
     if current.resumeAt > 0 { return "Resume from \(formatTime(Double(current.resumeAt)))" }
     return "Play"
   }
@@ -27,6 +31,10 @@ struct EpisodeHeader: View {
   private var facts: String {
     var parts: [String] = []
     if let d = media?.duration { parts.append(formatTime(Double(d))) }
+    // Where Play resumes, now the button is only an icon.
+    if !playback.isCurrent(item), current.resumeAt > 0 {
+      parts.append("Left at \(formatTime(Double(current.resumeAt)))")
+    }
     switch (media?.season, media?.episode) {
     case (let s?, let e?): parts.append("Season \(s), episode \(e)")
     case (nil, let e?): parts.append("Episode \(e)")
@@ -39,12 +47,14 @@ struct EpisodeHeader: View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 8) {
         Button(
-          playLabel, systemImage: playingAudio && playback.isPlaying ? "pause.fill" : "play.fill"
+          playLabel, systemImage: playingPlay && playback.isPlaying ? "pause.fill" : "play.fill"
         ) {
           Task { await playback.play(current) }
         }
         .prominentButtonStyle()
-        if media?.video != nil {
+        .labelStyle(.iconOnly)
+        // With the video downloaded, Play already plays it.
+        if media?.video != nil && !playsVideo {
           Button(
             playingVideo && playback.isPlaying ? "Pause" : "Video",
             systemImage: playingVideo && playback.isPlaying ? "pause.fill" : "play.rectangle"
@@ -52,6 +62,7 @@ struct EpisodeHeader: View {
             Task { await playback.play(current, video: true) }
           }
           .secondaryButtonStyle()
+          .labelStyle(.iconOnly)
         }
         if media?.chapters != nil {
           Button("Chapters", systemImage: "list.bullet") { showChapters = true }

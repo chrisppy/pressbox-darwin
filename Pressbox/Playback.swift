@@ -100,7 +100,10 @@ final class Playback {
 
   /// Starts an episode (its video, with `video`), resuming where it was
   /// left; or, if it is the one playing that way, pauses or resumes it.
-  func play(_ episode: Item, video: Bool = false) async {
+  /// Without `video`, it plays what is downloaded: the video if that was
+  /// saved, otherwise the audio.
+  func play(_ episode: Item, video: Bool? = nil) async {
+    let video = video ?? Self.downloadedVideo(episode)
     if item?.id == episode.id && isVideo == video {
       togglePause()
       return
@@ -189,6 +192,11 @@ final class Playback {
         updateNowPlaying()
       }
     }
+  }
+
+  /// The episode's download is its video.
+  static func downloadedVideo(_ episode: Item) -> Bool {
+    Downloads.shared.saved[episode.id]?.kind == .video
   }
 
   func togglePause() {

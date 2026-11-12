@@ -66,4 +66,4 @@ The first release.
   (off by default).
 
 [0.1.0]: https://github.com/chrisppy/pressbox-ios/releases/tag/v0.1.0
-[2026.11.0]: https://github.com/chrisppy/pressbox-darwin/compare/v0.1.0...v2026.11.0
+[2026.11.0]: https://github.com/red-oxide/pressbox-darwin/compare/v0.1.0...v2026.11.0

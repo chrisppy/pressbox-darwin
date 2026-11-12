@@ -6,7 +6,7 @@ SPDX-License-Identifier: MPL-2.0
 # pressbox-darwin
 
 The iPhone, iPad and Mac app for
-[pressbox](https://github.com/chrisppy/pressbox), a self-hosted feed reader
+[pressbox](https://github.com/red-oxide/pressbox), a self-hosted feed reader
 whose feeds and users are declared in NixOS. It reads from your pressbox server
 over its HTTP API (`/api/v1`) and shares read and starred state with the other
 clients, such as the `pressbox` terminal reader.
@@ -47,8 +47,8 @@ On first launch, enter the server address and tap "Pair this device". The app
 shows a code like `K7W-4QX`: approve it on the server with
 `sudo pressboxctl approve K7W-4QX`, or from a device that is already paired
 (`pressbox approve K7W-4QX`). See pressbox's docs on
-[pairing](https://github.com/chrisppy/pressbox/blob/master/docs/pairing.md) and
-[users](https://github.com/chrisppy/pressbox/blob/master/docs/server.md#users).
+[pairing](https://github.com/red-oxide/pressbox/blob/master/docs/pairing.md) and
+[users](https://github.com/red-oxide/pressbox/blob/master/docs/server.md#users).
 
 Settings also has:
 

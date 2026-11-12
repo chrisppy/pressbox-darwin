@@ -3,7 +3,7 @@
 
 import SwiftUI
 
-// Birdland colors, from https://github.com/chrisppy/base24-themes: Birdland in
+// Birdland colors, from https://github.com/red-oxide/base24-themes: Birdland in
 // dark mode, Birdland Light in light mode. Each color is a color set in
 // Assets.xcassets holding both values; the comments give its Base24 slot.
 // AccentColor (base08, Orioles orange) is the app's tint, so it is not repeated

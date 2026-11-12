@@ -121,19 +121,21 @@ struct ItemListView: View {
       }
     }
     .bottomControls(search: true) {
-      // On: unread items only; off: all of them.
-      Toggle(
-        isOn: Binding(
-          get: { store.unreadOnly },
-          set: { value in Task { await store.setUnreadOnly(value) } })
-      ) {
-        Label(
-          "Unread only",
-          systemImage: store.unreadOnly
-            ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+      // On: unread items only; off: all of them. Starred shows every starred
+      // item either way, so it has none.
+      if store.source != .starred {
+        Toggle(
+          isOn: Binding(
+            get: { store.unreadOnly },
+            set: { value in Task { await store.setUnreadOnly(value) } })
+        ) {
+          Label(
+            "Unread only",
+            systemImage: store.unreadOnly
+              ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        }
+        .toggleStyle(.button)
       }
-      .toggleStyle(.button)
-      .disabled(store.source == .starred)
     }
     // Up top, away from the thumb, and asking first: it can't be undone.
     .toolbar {

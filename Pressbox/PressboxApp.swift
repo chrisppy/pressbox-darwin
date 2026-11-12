@@ -89,7 +89,8 @@ struct ContentView: View {
                 home: {
                   selectedItem = nil
                   store.source = nil
-                }) : nil)
+                }) : nil
+          )
           .environment(\.showsMiniPlayer, true)
       } else {
         ContentUnavailableView("No item selected", systemImage: "doc.text")

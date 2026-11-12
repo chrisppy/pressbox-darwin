@@ -279,7 +279,7 @@ final class Downloads {
   /// AVPlayer tells a local file's format by its extension.
   private static func fileExtension(of enclosure: Enclosure) -> String {
     let ext = URL(string: enclosure.url)?.pathExtension.lowercased() ?? ""
-    if !ext.isEmpty, ext.count <= 4, ext.allSatisfy(\.isLetterOrNumber) { return ext }
+    if !ext.isEmpty, ext.count <= 4, ext.allSatisfy({ $0.isLetter || $0.isNumber }) { return ext }
     switch enclosure.mime?.lowercased() {
     case "audio/mp4", "audio/x-m4a", "audio/aac": return "m4a"
     case "video/mp4": return "mp4"

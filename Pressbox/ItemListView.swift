@@ -74,7 +74,10 @@ struct ItemListView: View {
     }
     .safeAreaInset(edge: .bottom) {
       if store.isOffline {
-        Label("Offline: showing saved items", systemImage: "wifi.slash")
+        Label(
+          store.outbox.isEmpty
+            ? "Offline: showing saved items" : "Offline: changes will sync when you're back",
+          systemImage: "wifi.slash")
           .font(.footnote)
           .statusBanner()
       } else if let message = store.errorMessage {

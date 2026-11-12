@@ -53,6 +53,11 @@ through API v1 (`/api/v1`).
   26); star, read, share and Safari under an article. On iPhone, Back (and Home,
   to the feed list, from an article) lead the group; the feed list has neither.
   Swiping from the edge still goes back.
+- Changes made offline are kept and sent later: marking items read or unread,
+  starring, podcast positions, and an episode finishing while offline (which
+  used to leave it unread). They show in the app at once, wait on disk while the
+  server can't be reached, and are sent before the next reload. The offline
+  banner says when changes are waiting.
 
 ## [0.1.0] - 2026-11-07
 

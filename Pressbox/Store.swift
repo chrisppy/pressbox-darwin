@@ -31,6 +31,9 @@ final class Store {
   var isOffline = false
   /// Full articles opened or prefetched, for offline reading.
   private(set) var articles: [Int64: Item] = [:]
+  /// Read, starred and position changes the server hasn't had yet.
+  private(set) var outbox = Outbox()
+  private var isFlushing = false
 
   // Pairing in progress: the code to show the user.
   var pairCode: String?
@@ -74,6 +77,7 @@ final class Store {
       items = snapshot.items
       articles = snapshot.articles
     }
+    outbox = Cache.loadOutbox()
     playback.store = self
   }
 
@@ -121,14 +125,74 @@ final class Store {
       isOffline = false
     } catch is CancellationError {
     } catch let error as URLError where error.code == .cancelled {
-    } catch let error as URLError
-      where [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotConnectToHost]
-      .contains(error.code)
-    {
+    } catch where Self.isConnectionError(error) {
       isOffline = true
       errorMessage = nil
     } catch {
       errorMessage = error.localizedDescription
+    }
+  }
+
+  /// The server couldn't be reached: worth trying again later.
+  private static func isConnectionError(_ error: Error) -> Bool {
+    guard let error = error as? URLError else { return false }
+    return [.notConnectedToInternet, .networkConnectionLost, .timedOut, .cannotConnectToHost]
+      .contains(error.code)
+  }
+
+  /// Sends a change to the server, or keeps it in the outbox to send later
+  /// if the server can't be reached (or the request was cancelled). Returns
+  /// false only if the server refused it.
+  private func send(_ change: Change) async -> Bool {
+    let before = outbox
+    defer { if outbox != before { Cache.saveOutbox(outbox) } }
+    // While the outbox is being sent, queue behind it, so an older change to
+    // the same item can't reach the server after this one.
+    if isFlushing {
+      outbox.add(change)
+      return true
+    }
+    outbox.supersede(with: change)
+    do {
+      try await api.submit(change)
+      errorMessage = nil
+      isOffline = false
+    } catch where Self.isConnectionError(error) || Self.isCancellation(error) {
+      isOffline = isOffline || Self.isConnectionError(error)
+      outbox.add(change)
+    } catch {
+      errorMessage = error.localizedDescription
+      return false
+    }
+    return true
+  }
+
+  private static func isCancellation(_ error: Error) -> Bool {
+    error is CancellationError || (error as? URLError)?.code == .cancelled
+  }
+
+  /// Sends the changes kept while offline, before anything is loaded so the
+  /// server's unread counts include them. Stops if the server still can't be
+  /// reached. A change the server refuses (an item it no longer has, say) is
+  /// dropped, since sending it again won't help.
+  private func flushOutbox() async {
+    guard !outbox.isEmpty, !isFlushing else { return }
+    isFlushing = true
+    defer {
+      isFlushing = false
+      Cache.saveOutbox(outbox)
+    }
+    // One at a time, taking the next from the outbox each round, so changes
+    // made meanwhile are sent too.
+    while let change = outbox.changes.first {
+      do {
+        try await api.submit(change)
+      } catch where Self.isConnectionError(error) || Self.isCancellation(error) {
+        return
+      } catch {
+        // Refused: drop it.
+      }
+      outbox.remove(change)
     }
   }
 
@@ -143,6 +207,7 @@ final class Store {
     }
     isLoading = true
     defer { isLoading = false }
+    await flushOutbox()
     await run {
       feeds = try await api.feeds()
       try await loadItems()
@@ -226,7 +291,7 @@ final class Store {
   /// Saves where playback stopped, here and on the server.
   func savePosition(_ item: Item, _ position: Int) async {
     update(item.id) { $0.position = position }
-    await run { try await api.setPosition(item.id, position) }
+    _ = await send(.position(item.id, position))
   }
 
   /// An episode played to the end: read, and its position forgotten.
@@ -248,22 +313,30 @@ final class Store {
     saveCache()
   }
 
+  /// Marks an item read or unread: here at once, and on the server as soon as
+  /// it can be reached. Undone if the server refuses it.
   func setRead(_ item: Item, _ value: Bool) async {
     guard item.read != value else { return }
-    await run {
-      try await api.setRead(item.id, value)
-      update(item.id) { $0.read = value }
-      if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
-        feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
-      }
-    }
-    updateBadge()
+    applyRead(item, value)
+    if !(await send(.read(item.id, value))) { applyRead(item, !value) }
   }
 
+  private func applyRead(_ item: Item, _ value: Bool) {
+    update(item.id) { $0.read = value }
+    if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
+      feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
+    }
+    updateBadge()
+    saveCache()
+  }
+
+  /// Stars or unstars an item, as `setRead` does.
   func setStarred(_ item: Item, _ value: Bool) async {
-    await run {
-      try await api.setStarred(item.id, value)
-      update(item.id) { $0.starred = value }
+    update(item.id) { $0.starred = value }
+    saveCache()
+    if !(await send(.starred(item.id, value))) {
+      update(item.id) { $0.starred = !value }
+      saveCache()
     }
   }
 
@@ -352,6 +425,7 @@ final class Store {
     feeds = []
     items = []
     articles = [:]
+    outbox = Outbox()
     Cache.clear()
   }
 

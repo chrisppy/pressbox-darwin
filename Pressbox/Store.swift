@@ -34,6 +34,10 @@ final class Store {
   /// Read, starred and position changes the server hasn't had yet.
   private(set) var outbox = Outbox()
   private var isFlushing = false
+  /// The episodes to play next, in order, as the server keeps them.
+  private(set) var queue: [Item] = []
+  /// The server keeps a queue (older ones don't), so Up Next is shown.
+  private(set) var hasQueue = false
 
   // Pairing in progress: the code to show the user.
   var pairCode: String?
@@ -76,6 +80,8 @@ final class Store {
       feeds = snapshot.feeds
       items = snapshot.items
       articles = snapshot.articles
+      queue = snapshot.queue ?? []
+      hasQueue = snapshot.queue != nil
     }
     outbox = Cache.loadOutbox()
     playback.store = self
@@ -197,7 +203,8 @@ final class Store {
   }
 
   private func saveCache() {
-    Cache.save(Snapshot(feeds: feeds, items: items, articles: articles))
+    Cache.save(
+      Snapshot(feeds: feeds, items: items, articles: articles, queue: hasQueue ? queue : nil))
   }
 
   func reload() async {
@@ -211,6 +218,7 @@ final class Store {
     await run {
       feeds = try await api.feeds()
       try await loadItems()
+      try await loadQueue()
       if me == nil { me = try await api.me() }
       // Older servers don't have the endpoint; that's not an error.
       if serverVersion == nil { serverVersion = try? await api.version() }
@@ -294,11 +302,53 @@ final class Store {
     _ = await send(.position(item.id, position))
   }
 
-  /// An episode played to the end: read, and its position forgotten.
+  /// An episode played to the end: read, its position forgotten, and out of
+  /// Up Next.
   func finished(_ item: Item) async {
     await savePosition(item, 0)
     let current = self.item(item.id) ?? articles[item.id] ?? item
     await setRead(current, true)
+    // Already read (played again), marking it read changed nothing.
+    if isQueued(item) { await dequeue(item) }
+  }
+
+  // MARK: Up Next
+
+  private func loadQueue() async throws {
+    do {
+      queue = try await api.queue()
+      hasQueue = true
+    } catch APIError.notFound {
+      // An older server, without a queue.
+      queue = []
+      hasQueue = false
+    }
+  }
+
+  func isQueued(_ item: Item) -> Bool { queue.contains { $0.id == item.id } }
+
+  /// Adds an episode to Up Next: to play next, or after the rest. Moves it
+  /// there if it is queued already.
+  func enqueue(_ item: Item, next: Bool = false) async {
+    var new = queue.filter { $0.id != item.id }
+    if next { new.insert(item, at: 0) } else { new.append(item) }
+    await setQueue(new)
+  }
+
+  func dequeue(_ item: Item) async {
+    await setQueue(queue.filter { $0.id != item.id })
+  }
+
+  /// Replaces Up Next (to reorder it, say): here at once, and on the server
+  /// as soon as it can be reached.
+  func setQueue(_ new: [Item]) async {
+    let old = queue
+    queue = new
+    saveCache()
+    if !(await send(.queue(new.map(\.id)))) {
+      queue = old
+      saveCache()
+    }
   }
 
   /// Downloads the content of unread items not cached yet, so they can be
@@ -323,6 +373,8 @@ final class Store {
 
   private func applyRead(_ item: Item, _ value: Bool) {
     update(item.id) { $0.read = value }
+    // As on the server: read items leave Up Next.
+    if value { queue.removeAll { $0.id == item.id } }
     if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
       feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
     }
@@ -362,6 +414,7 @@ final class Store {
 
   private func update(_ id: Int64, _ change: (inout Item) -> Void) {
     for i in items.indices where items[i].id == id { change(&items[i]) }
+    for i in queue.indices where queue[i].id == id { change(&queue[i]) }
     if articles[id] != nil { change(&articles[id]!) }
   }
 
@@ -425,6 +478,8 @@ final class Store {
     feeds = []
     items = []
     articles = [:]
+    queue = []
+    hasQueue = false
     outbox = Outbox()
     Cache.clear()
   }

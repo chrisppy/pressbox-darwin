@@ -87,6 +87,16 @@ struct TranscriptFile: Codable, Hashable {
 }
 
 /// Body of `PUT /api/v1/items/{id}/position`.
+/// `GET /api/v1/queue`: the Up Next queue.
+struct Queue: Codable {
+  let items: [Item]
+}
+
+/// Body for `PUT /api/v1/queue`: the whole queue, in order.
+struct QueueOrder: Codable {
+  let ids: [Int64]
+}
+
 struct Position: Codable {
   let position: Int
 }

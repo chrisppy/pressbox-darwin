@@ -156,7 +156,7 @@ final class Playback {
       // initializers with the iOS 26 SDK.
       Task { @MainActor in
         guard let self else { return }
-        await self.finish()
+        await self.finish(advance: true)
       }
     }
     player.replaceCurrentItem(with: playerItem)
@@ -253,13 +253,23 @@ final class Playback {
   func discard() { teardown() }
 
   /// Played to the end: marks the episode read and forgets its position.
-  private func finish() async {
+  /// With `advance`, carries on with the next episode in Up Next.
+  private func finish(advance: Bool = false) async {
     guard let item else { return }
-    teardown()
-    await store?.finished(item)
+    let next = advance ? store?.queue.first(where: { $0.id != item.id }) : nil
+    // Going on to the next episode, keep the audio session: iOS may not let
+    // a backgrounded app activate it again.
+    teardown(deactivate: next == nil)
+    guard let next else {
+      await store?.finished(item)
+      return
+    }
+    // Start the next one first: marking this one done waits on the network.
+    Task { await store?.finished(item) }
+    await play(next)
   }
 
-  private func teardown() {
+  private func teardown(deactivate: Bool = true) {
     player.pause()
     if let timeObserver { player.removeTimeObserver(timeObserver) }
     if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
@@ -275,7 +285,10 @@ final class Playback {
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     MPNowPlayingInfoCenter.default().playbackState = .stopped
     #if os(iOS)
-      try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+      if deactivate {
+        try? AVAudioSession.sharedInstance().setActive(
+          false, options: .notifyOthersOnDeactivation)
+      }
     #endif
   }
 

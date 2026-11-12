@@ -63,6 +63,23 @@ struct EpisodeHeader: View {
             .secondaryButtonStyle()
             .labelStyle(.iconOnly)
         }
+        if store.hasQueue {
+          let queued = store.isQueued(item)
+          Button(
+            queued ? "Remove from Up Next" : "Add to Up Next",
+            systemImage: queued ? "text.badge.checkmark" : "text.badge.plus"
+          ) {
+            Task {
+              if queued {
+                await store.dequeue(current)
+              } else {
+                await store.enqueue(current)
+              }
+            }
+          }
+          .secondaryButtonStyle()
+          .labelStyle(.iconOnly)
+        }
       }
       if !facts.isEmpty {
         Text(facts).font(.footnote).foregroundStyle(.secondary)
@@ -253,6 +270,7 @@ struct NowPlayingView: View {
   @State private var scrubbing: Double?
   @State private var showChapters = false
   @State private var showTranscript = false
+  @State private var showUpNext = false
 
   var body: some View {
     let playback = store.playback
@@ -283,6 +301,10 @@ struct NowPlayingView: View {
             }
             if item.media?.hasTranscript ?? false {
               Button("Transcript", systemImage: "text.quote") { showTranscript = true }
+                .labelStyle(.iconOnly)
+            }
+            if store.hasQueue {
+              Button("Up Next", systemImage: Self.upNextSymbol) { showUpNext = true }
                 .labelStyle(.iconOnly)
             }
             RoutePicker().frame(width: 32, height: 32)
@@ -339,8 +361,13 @@ struct NowPlayingView: View {
           .macSheetSize(width: 480, height: 600)
         }
       }
+      .sheet(isPresented: $showUpNext) {
+        UpNextView()
+      }
     }
   }
+
+  static let upNextSymbol = "text.line.first.and.arrowtriangle.forward"
 
   private static func rateLabel(_ rate: Float) -> String {
     rate == rate.rounded() ? String(Int(rate)) : String(format: "%g", rate)
@@ -429,6 +456,71 @@ private struct Artwork: View {
     .frame(maxWidth: 320, maxHeight: 320)
     .aspectRatio(1, contentMode: .fit)
     .clipShape(RoundedRectangle(cornerRadius: 16))
+  }
+}
+
+/// The episodes to play next, in order: tap one to play it, drag to
+/// reorder, swipe (or Delete on Mac) to remove. When an episode ends, the
+/// first one here starts.
+struct UpNextView: View {
+  @Environment(Store.self) private var store
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      List {
+        ForEach(store.queue) { item in
+          Button {
+            Task { await store.playback.play(item) }
+          } label: {
+            ItemRow(item: item, feedTitle: store.feedTitle(item.feedId))
+          }
+          .foregroundStyle(.primary)
+          .contextMenu {
+            Button("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward") {
+              Task { await store.enqueue(item, next: true) }
+            }
+            Button("Remove from Up Next", systemImage: "minus.circle", role: .destructive) {
+              Task { await store.dequeue(item) }
+            }
+          }
+        }
+        .onMove { from, to in
+          var queue = store.queue
+          queue.move(fromOffsets: from, toOffset: to)
+          Task { await store.setQueue(queue) }
+        }
+        .onDelete { offsets in
+          var queue = store.queue
+          queue.remove(atOffsets: offsets)
+          Task { await store.setQueue(queue) }
+        }
+      }
+      .listStyle(.plain)
+      .themedScreen()
+      .overlay {
+        if store.queue.isEmpty {
+          ContentUnavailableView(
+            "Up Next is empty", systemImage: NowPlayingView.upNextSymbol,
+            description: Text(
+              "Swipe an episode in a list, or use Add to Up Next above it, to queue it."))
+        }
+      }
+      .navigationTitle("Up Next")
+      .inlineTitle()
+      .toolbar {
+        #if os(iOS)
+          ToolbarItem(placement: .cancellationAction) {
+            EditButton().disabled(store.queue.isEmpty)
+          }
+        #endif
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") { dismiss() }
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
+    .macSheetSize(width: 420, height: 480)
   }
 }
 

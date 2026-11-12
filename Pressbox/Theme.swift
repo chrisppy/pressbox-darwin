@@ -24,6 +24,8 @@ enum Theme {
   static let read = Color("CamdenGreen")
   /// base0D: links in articles.
   static let link = Color("WarehouseOrange")
+  /// The accent (Orioles orange): the Up Next swipe action.
+  static let upNext = Color.accentColor
 
   /// CSS custom properties for the article page, light and dark: `--text`,
   /// `--muted` and `--link`. The page background stays transparent so the

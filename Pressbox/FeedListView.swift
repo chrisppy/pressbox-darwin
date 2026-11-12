@@ -6,6 +6,7 @@ import SwiftUI
 struct FeedListView: View {
   @Environment(Store.self) private var store
   @Binding var showSettings: Bool
+  @State private var showUpNext = false
 
   var body: some View {
     @Bindable var store = store
@@ -17,6 +18,15 @@ struct FeedListView: View {
         .badge(store.totalUnread)
         NavigationLink(value: Source.starred) {
           Label("Starred", systemImage: "star")
+        }
+        if store.hasQueue {
+          Button {
+            showUpNext = true
+          } label: {
+            Label("Up Next", systemImage: NowPlayingView.upNextSymbol)
+          }
+          .foregroundStyle(.primary)
+          .badge(store.queue.count)
         }
       }
       if !store.tags.isEmpty {
@@ -60,6 +70,9 @@ struct FeedListView: View {
       }
     }
     .themedScreen()
+    .sheet(isPresented: $showUpNext) {
+      UpNextView()
+    }
     .navigationTitle("pressbox")
     .refreshable { await store.reload() }
     .onChange(of: store.source) { _, source in

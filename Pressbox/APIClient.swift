@@ -127,6 +127,16 @@ struct APIClient {
     _ = try await send("PUT", "/api/v1/items/\(id)/position", body: Position(position: position))
   }
 
+  /// The Up Next queue, in order. Throws `.notFound` from servers without one.
+  func queue() async throws -> [Item] {
+    try decode(Queue.self, try await send("GET", "/api/v1/queue")).items
+  }
+
+  /// Replaces the Up Next queue with these items, in order.
+  func setQueue(_ ids: [Int64]) async throws {
+    _ = try await send("PUT", "/api/v1/queue", body: QueueOrder(ids: ids))
+  }
+
   /// An item's chapters; none if it has no chapters file.
   func chapters(_ id: Int64) async throws -> [Chapter] {
     do {

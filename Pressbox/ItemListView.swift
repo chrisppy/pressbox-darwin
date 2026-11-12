@@ -33,6 +33,37 @@ struct ItemListView: View {
               Task { await store.setStarred(item, !item.starred) }
             }
             .tint(Theme.star)
+            if item.isEpisode && store.hasQueue {
+              let queued = store.isQueued(item)
+              Button(
+                queued ? "Remove from Up Next" : "Up Next",
+                systemImage: queued ? "text.badge.minus" : "text.badge.plus"
+              ) {
+                Task {
+                  if queued {
+                    await store.dequeue(item)
+                  } else {
+                    await store.enqueue(item)
+                  }
+                }
+              }
+              .tint(Theme.upNext)
+            }
+          }
+          .contextMenu {
+            if item.isEpisode && store.hasQueue {
+              Button("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward") {
+                Task { await store.enqueue(item, next: true) }
+              }
+              Button("Play Last", systemImage: "text.line.last.and.arrowtriangle.forward") {
+                Task { await store.enqueue(item) }
+              }
+              if store.isQueued(item) {
+                Button("Remove from Up Next", systemImage: "minus.circle") {
+                  Task { await store.dequeue(item) }
+                }
+              }
+            }
           }
           .onAppear {
             visible.insert(item.id)

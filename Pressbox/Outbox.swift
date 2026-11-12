@@ -8,6 +8,8 @@ enum Change: Equatable {
   case read(Int64, Bool)
   case starred(Int64, Bool)
   case position(Int64, Int)
+  /// The whole Up Next queue, in order.
+  case queue([Int64])
 }
 
 /// Changes made while the server couldn't be reached, kept on disk and sent
@@ -18,13 +20,17 @@ struct Outbox: Codable, Equatable {
   var read: [Int64: Bool] = [:]
   var starred: [Int64: Bool] = [:]
   var positions: [Int64: Int] = [:]
+  /// The latest Up Next queue, sent after the rest: the server takes items
+  /// marked read out of it.
+  var queue: [Int64]?
 
-  var isEmpty: Bool { read.isEmpty && starred.isEmpty && positions.isEmpty }
+  var isEmpty: Bool { read.isEmpty && starred.isEmpty && positions.isEmpty && queue == nil }
 
   var changes: [Change] {
     read.map { .read($0.key, $0.value) }
       + starred.map { .starred($0.key, $0.value) }
       + positions.map { .position($0.key, $0.value) }
+      + (queue.map { [Change.queue($0)] } ?? [])
   }
 
   /// Keeps `change` to send later, replacing any earlier one of its kind.
@@ -33,6 +39,7 @@ struct Outbox: Codable, Equatable {
     case .read(let id, let value): read[id] = value
     case .starred(let id, let value): starred[id] = value
     case .position(let id, let value): positions[id] = value
+    case .queue(let ids): queue = ids
     }
   }
 
@@ -43,6 +50,7 @@ struct Outbox: Codable, Equatable {
     case .read(let id, _): read[id] = nil
     case .starred(let id, _): starred[id] = nil
     case .position(let id, _): positions[id] = nil
+    case .queue: queue = nil
     }
   }
 
@@ -59,6 +67,7 @@ extension APIClient {
     case .read(let id, let value): try await setRead(id, value)
     case .starred(let id, let value): try await setStarred(id, value)
     case .position(let id, let value): try await setPosition(id, value)
+    case .queue(let ids): try await setQueue(ids)
     }
   }
 }

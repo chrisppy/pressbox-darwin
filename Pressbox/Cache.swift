@@ -10,6 +10,8 @@ struct Snapshot: Codable {
   var feeds: [Feed] = []
   var items: [Item] = []
   var articles: [Int64: Item] = [:]
+  /// The Up Next queue; `nil` if the server has none.
+  var queue: [Item]?
 }
 
 enum Cache {

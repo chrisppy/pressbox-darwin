@@ -58,6 +58,13 @@ through API v1 (`/api/v1`).
   used to leave it unread). They show in the app at once, wait on disk while the
   server can't be reached, and are sent before the next reload. The offline
   banner says when changes are waiting.
+- Up Next (needs a pressbox server with a queue): episodes to play one after
+  another, kept on the server so every client shares it. Add an episode by
+  swiping its row, from its context menu (Play Next or Play Last), or with the
+  button above it; open Up Next from the feed list or the full player to play,
+  reorder or remove. When an episode ends, the first one in Up Next starts, and
+  finished episodes leave it. Changes made offline are sent later, like the
+  rest.
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.

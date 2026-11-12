@@ -7,7 +7,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     devfmt = {
-      url = "github:chrisppy/devfmt";
+      url = "github:red-oxide/devfmt";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

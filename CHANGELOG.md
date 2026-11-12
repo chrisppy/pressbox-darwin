@@ -52,9 +52,9 @@ through API v1 (`/api/v1`).
   Unread/All filter under the items, with search beside them (moved down on iOS
   26); star, read, share and Safari under an article, and under an episode Play,
   Up Next, Download and a More menu with the rest (the header above it keeps
-  Video, Chapters and Transcript). On iPhone, Back (and Home,
-  to the feed list, from an article) lead the group; the feed list has neither.
-  Swiping from the edge still goes back.
+  Video, Chapters and Transcript). On iPhone, Back (and Home, to the feed list,
+  from an article) lead the group; the feed list has neither. Swiping from the
+  edge still goes back.
 - Changes made offline are kept and sent later: marking items read or unread,
   starring, podcast positions, and an episode finishing while offline (which
   used to leave it unread). They show in the app at once, wait on disk while the
@@ -63,10 +63,10 @@ through API v1 (`/api/v1`).
 - Up Next (needs a pressbox server with a queue): episodes to play one after
   another, kept on the server so every client shares it. Add an episode by
   swiping its row, from its context menu (Play Next or Play Last), or with the
-  button in its bottom bar; open Up Next from the feed list or the full player to play,
-  reorder or remove. When an episode ends, the first one in Up Next starts, and
-  finished episodes leave it. Changes made offline are sent later, like the
-  rest.
+  button in its bottom bar; open Up Next from the feed list or the full player
+  to play, reorder or remove. When an episode ends, the first one in Up Next
+  starts, and finished episodes leave it. Changes made offline are sent later,
+  like the rest.
 - Downloads, to play episodes offline: the audio of the 10 newest unread
   episodes downloads automatically, and any episode's audio or video from its
   page. Settings chooses Wi-Fi only (the default) or Wi-Fi and cellular, shows

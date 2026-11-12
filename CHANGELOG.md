@@ -65,12 +65,12 @@ through API v1 (`/api/v1`).
   reorder or remove. When an episode ends, the first one in Up Next starts, and
   finished episodes leave it. Changes made offline are sent later, like the
   rest.
-- Downloads, to play episodes offline: the audio of the 10 newest unread episodes
-  downloads automatically, and any episode's audio or video from its page.
-  Settings chooses Wi-Fi only (the default) or Wi-Fi and cellular, shows the
-  space used and removes everything. Downloads go once an episode is finished or
-  read, anywhere, and automatic ones once they leave the 10 newest unread. They
-  use a background session, so they finish with the app closed.
+- Downloads, to play episodes offline: the audio of the 10 newest unread
+  episodes downloads automatically, and any episode's audio or video from its
+  page. Settings chooses Wi-Fi only (the default) or Wi-Fi and cellular, shows
+  the space used and removes everything. Downloads go once an episode is
+  finished or read, anywhere, and automatic ones once they leave the 10 newest
+  unread. They use a background session, so they finish with the app closed.
 - Widgets: Unread (the count, and the newest unread items; on the Lock Screen
   too) and Up Next (the episode playing or next, with a play/pause button that
   works without opening the app, and what follows). The app shares what they

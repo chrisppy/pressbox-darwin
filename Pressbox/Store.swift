@@ -38,6 +38,9 @@ final class Store {
   private(set) var queue: [Item] = []
   /// The server keeps a queue (older ones don't), so Up Next is shown.
   private(set) var hasQueue = false
+  /// The newest unread items in any feed, for the widgets.
+  private var latestUnread: [Item] = []
+  private var widgetUpdate: Task<Void, Never>?
 
   // Pairing in progress: the code to show the user.
   var pairCode: String?
@@ -85,6 +88,8 @@ final class Store {
     }
     outbox = Cache.loadOutbox()
     playback.store = self
+    // The Up Next widget's play/pause button.
+    PlaybackBridge.toggle = { [weak self] in await self?.togglePlayback() }
   }
 
   var isConfigured: Bool {
@@ -121,7 +126,9 @@ final class Store {
     feeds.first { $0.id == id }?.title ?? id
   }
 
-  func item(_ id: Int64) -> Item? { items.first { $0.id == id } }
+  func item(_ id: Int64) -> Item? {
+    items.first { $0.id == id } ?? articles[id] ?? queue.first { $0.id == id }
+  }
 
   /// Runs a request, showing any error instead of throwing it.
   private func run(_ body: () async throws -> Void) async {
@@ -219,12 +226,14 @@ final class Store {
       feeds = try await api.feeds()
       try await loadItems()
       try await loadQueue()
+      latestUnread = try await api.items(source: .all, unreadOnly: true, limit: 8).items
       if me == nil { me = try await api.me() }
       // Older servers don't have the endpoint; that's not an error.
       if serverVersion == nil { serverVersion = try? await api.version() }
     }
     updateBadge()
     saveCache()
+    updateWidgets()
     await prefetchUnread()
   }
 
@@ -345,6 +354,7 @@ final class Store {
     let old = queue
     queue = new
     saveCache()
+    updateWidgets()
     if !(await send(.queue(new.map(\.id)))) {
       queue = old
       saveCache()
@@ -374,7 +384,10 @@ final class Store {
   private func applyRead(_ item: Item, _ value: Bool) {
     update(item.id) { $0.read = value }
     // As on the server: read items leave Up Next.
-    if value { queue.removeAll { $0.id == item.id } }
+    if value {
+      queue.removeAll { $0.id == item.id }
+      latestUnread.removeAll { $0.id == item.id }
+    }
     if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
       feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
     }
@@ -471,6 +484,62 @@ final class Store {
     return result
   }
 
+  // MARK: Widgets
+
+  /// Writes what the widgets show, a moment after the last change (one action
+  /// can change several things).
+  func updateWidgets() {
+    widgetUpdate?.cancel()
+    widgetUpdate = Task {
+      try? await Task.sleep(for: .milliseconds(300))
+      guard !Task.isCancelled else { return }
+      WidgetStore.save(widgetSnapshot())
+    }
+  }
+
+  private func widgetSnapshot() -> WidgetSnapshot {
+    let entry = { (item: Item) in
+      WidgetSnapshot.Entry(
+        id: item.id, title: item.title, feed: self.feedTitle(item.feedId),
+        published: item.published)
+    }
+    var snapshot = WidgetSnapshot()
+    snapshot.configured = isConfigured
+    snapshot.unread = totalUnread
+    snapshot.latest = latestUnread.filter { !$0.read }.map(entry)
+    if let item = playback.item {
+      snapshot.nowPlaying = entry(item)
+      snapshot.isPlaying = playback.isPlaying
+      snapshot.position = playback.position
+      snapshot.duration = playback.duration
+      snapshot.rate = playback.rate
+    }
+    snapshot.hasQueue = hasQueue
+    snapshot.upNext = queue.filter { $0.id != playback.item?.id }.prefix(4).map(entry)
+    snapshot.written = Date()
+    return snapshot
+  }
+
+  /// The widget's button: pauses or resumes, or plays the first in Up Next.
+  func togglePlayback() async {
+    if playback.item != nil {
+      playback.togglePause()
+    } else if let next = queue.first {
+      await playback.play(next)
+    }
+  }
+
+  /// Shows an item a widget opened, fetching it if no list here has it.
+  func reveal(_ id: Int64) async {
+    if item(id) == nil {
+      await run {
+        let full = try await api.item(id)
+        articles[id] = full
+      }
+    }
+    if source == nil { source = .all }
+  }
+
   func forget() {
     playback.discard()
     token = ""
@@ -480,6 +549,8 @@ final class Store {
     articles = [:]
     queue = []
     hasQueue = false
+    latestUnread = []
+    updateWidgets()
     outbox = Outbox()
     Cache.clear()
   }
@@ -522,6 +593,7 @@ final class Store {
   private func updateBadge() {
     let count = badgeEnabled ? totalUnread : 0
     UNUserNotificationCenter.current().setBadgeCount(count)
+    updateWidgets()
   }
 
   #if os(macOS)
@@ -536,7 +608,8 @@ final class Store {
   /// refresh; it reloads on a timer while open instead (see `ContentView`).
   nonisolated static func scheduleBackgroundRefresh() {
     #if os(iOS)
-      guard UserDefaults.standard.bool(forKey: "badgeEnabled") else {
+      // For the badge and the widgets.
+      guard !(UserDefaults.standard.string(forKey: "server") ?? "").isEmpty else {
         BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: refreshTaskID)
         return
       }
@@ -550,12 +623,27 @@ final class Store {
   nonisolated static func backgroundRefresh() async {
     scheduleBackgroundRefresh()
     let defaults = UserDefaults.standard
-    guard defaults.bool(forKey: "badgeEnabled"),
-      let server = defaults.string(forKey: "server"),
-      let token = Keychain.token(),
-      let feeds = try? await APIClient(server: server, token: token).feeds()
+    guard let server = defaults.string(forKey: "server"),
+      let token = Keychain.token()
     else { return }
+    let api = APIClient(server: server, token: token)
+    guard let feeds = try? await api.feeds() else { return }
     let unread = feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread }
-    try? await UNUserNotificationCenter.current().setBadgeCount(unread)
+    if defaults.bool(forKey: "badgeEnabled") {
+      try? await UNUserNotificationCenter.current().setBadgeCount(unread)
+    }
+    // The widgets: new counts and items; what plays is as the app left it.
+    var snapshot = WidgetStore.load()
+    snapshot.configured = true
+    snapshot.unread = unread
+    if let latest = try? await api.items(source: .all, unreadOnly: true, limit: 8).items {
+      let titles = Dictionary(feeds.map { ($0.id, $0.title) }, uniquingKeysWith: { a, _ in a })
+      snapshot.latest = latest.map {
+        WidgetSnapshot.Entry(
+          id: $0.id, title: $0.title, feed: titles[$0.feedId] ?? $0.feedId,
+          published: $0.published)
+      }
+    }
+    WidgetStore.save(snapshot)
   }
 }

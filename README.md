@@ -67,6 +67,22 @@ Server is ⇧⌘R, and each column's buttons are in the window toolbar.
 The Server section shows the address, the signed-in user and device, and the
 server's version.
 
+### Widgets
+
+Two widgets, for the Home Screen and Today view on iPhone and iPad and the
+desktop and Notification Center on Mac:
+
+- **Unread**: the unread count (small), or the count and the newest unread items
+  (medium and large); tap an item to open it. On the iPhone and iPad Lock Screen
+  it shows the count, or the count and the newest title.
+- **Up Next**: the episode playing, or the first in Up Next, with a progress bar
+  and a play/pause button that works without opening the app; the medium size
+  also lists what plays next.
+
+The widgets show what the app last saw, through an App Group
+(`group.org.red-oxide.pressbox`): they redraw when the app changes something
+and, on iPhone and iPad, after background refreshes.
+
 ### Podcasts
 
 Podcast episodes (items with audio or video) show a waveform in the list, a

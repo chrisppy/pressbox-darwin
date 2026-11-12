@@ -99,6 +99,14 @@ struct ContentView: View {
       MiniPlayer()
     }
     .settings(isPresented: $showSettings)
+    // pressbox://item/123, from the widgets.
+    .onOpenURL { url in
+      guard let id = WidgetStore.itemID(in: url) else { return }
+      Task {
+        await store.reveal(id)
+        selectedItem = id
+      }
+    }
     .overlay {
       if store.isLocked {
         LockView()

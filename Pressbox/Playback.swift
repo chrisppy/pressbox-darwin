@@ -21,15 +21,21 @@ import Observation
 @Observable
 final class Playback {
   /// The episode playing (or paused); `nil` when stopped.
-  private(set) var item: Item?
+  private(set) var item: Item? {
+    didSet { if oldValue?.id != item?.id { store?.updateWidgets() } }
+  }
   private(set) var isVideo = false
   private(set) var chapters: [Chapter] = []
   /// Seconds into the episode.
   private(set) var position: Double = 0
   private(set) var duration: Double?
-  private(set) var isPlaying = false
+  private(set) var isPlaying = false {
+    didSet { if oldValue != isPlaying { store?.updateWidgets() } }
+  }
   private(set) var isLoading = false
-  private(set) var rate: Float = 1
+  private(set) var rate: Float = 1 {
+    didSet { if oldValue != rate { store?.updateWidgets() } }
+  }
   var errorMessage: String?
 
   /// The speeds the speed button steps through.

@@ -65,6 +65,12 @@ through API v1 (`/api/v1`).
   reorder or remove. When an episode ends, the first one in Up Next starts, and
   finished episodes leave it. Changes made offline are sent later, like the
   rest.
+- Widgets: Unread (the count, and the newest unread items; on the Lock Screen
+  too) and Up Next (the episode playing or next, with a play/pause button that
+  works without opening the app, and what follows). The app shares what they
+  show through the App Group `group.org.red-oxide.pressbox`, and background
+  refresh now runs whenever a server is set, to keep them current, not only for
+  the badge. Items open from the widgets with `pressbox://item/ID` links.
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.

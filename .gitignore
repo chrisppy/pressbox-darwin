@@ -4,6 +4,7 @@
 # XcodeGen generates these from project.yml.
 *.xcodeproj
 Pressbox/Info.plist
+Widgets/Info.plist
 build/
 result
 result-*

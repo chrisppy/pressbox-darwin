@@ -27,6 +27,11 @@ targets:
     supportedDestinations: [iOS, macOS]
     sources:
       - Pressbox
+      # Also in the widget extension: what the widgets show, and their
+      # play/pause intent.
+      - Shared
+    dependencies:
+      - target: PressboxWidgets
     # A shared scheme, so `xcodebuild -scheme Pressbox` works in CI.
     scheme: {}
     settings:
@@ -44,8 +49,10 @@ targets:
         "INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphone*]": true
         "INFOPLIST_KEY_UISupportedInterfaceOrientations[sdk=iphone*]": UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
         "INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad[sdk=iphone*]": UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        # Mac only: the App Sandbox (with outgoing connections, for the
-        # server) and the hardened runtime.
+        # The App Group shared with the widgets; on Mac also the App Sandbox
+        # (with outgoing connections, for the server) and the hardened
+        # runtime.
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": Config/iOS.entitlements
         "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Config/macOS.entitlements
         "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": true
     info:
@@ -61,7 +68,37 @@ targets:
         # app refreshes on a timer while it is open). Audio keeps podcasts
         # playing (and video in picture in picture) in the background.
         UIBackgroundModes: [fetch, audio]
+        # pressbox://item/123: the widgets open items.
+        CFBundleURLTypes:
+          - CFBundleURLName: org.red-oxide.pressbox
+            CFBundleURLSchemes: [pressbox]
         BGTaskSchedulerPermittedIdentifiers: [org.red-oxide.pressbox.refresh]
         # Only standard HTTPS, which is exempt from export compliance, so
         # TestFlight doesn't ask about encryption on every build.
         ITSAppUsesNonExemptEncryption: false
+  PressboxWidgets:
+    type: app-extension
+    platform: auto
+    supportedDestinations: [iOS, macOS]
+    sources:
+      - Widgets
+      - Shared
+      # The Birdland color sets.
+      - path: Pressbox/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.red-oxide.pressbox.widgets
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: pressbox
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # The App Group, to read what the app writes; on Mac also the App
+        # Sandbox, which widget extensions need.
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": Config/iOS.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Config/Widgets-macOS.entitlements
+        "ENABLE_HARDENED_RUNTIME[sdk=macosx*]": true
+    info:
+      path: Widgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension

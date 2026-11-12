@@ -11,6 +11,7 @@ struct ItemListView: View {
   /// read as they scroll off the top.
   @State private var visible: Set<Item.ID> = []
   @State private var isScrolling = false
+  @State private var confirmMarkAll = false
 
   var body: some View {
     List(selection: $selection) {
@@ -120,28 +121,50 @@ struct ItemListView: View {
       }
     }
     .bottomControls(search: true) {
-      Button("Mark all as read", systemImage: "checkmark.circle") {
+      // On: unread items only; off: all of them.
+      Toggle(
+        isOn: Binding(
+          get: { store.unreadOnly },
+          set: { value in Task { await store.setUnreadOnly(value) } })
+      ) {
+        Label(
+          "Unread only",
+          systemImage: store.unreadOnly
+            ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+      }
+      .toggleStyle(.button)
+      .disabled(store.source == .starred)
+    }
+    // Up top, away from the thumb, and asking first: it can't be undone.
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        Button("Mark all as read", systemImage: "checkmark.circle") { confirmMarkAll = true }
+          .disabled(markAllCount == 0)
+      }
+    }
+    .confirmationDialog(
+      markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
+    ) {
+      Button("Mark \(markAllCount) as Read", role: .destructive) {
         Task { await store.markAllRead() }
       }
-      .disabled(store.source == .starred || store.items.isEmpty)
-      Menu {
-        Picker(
-          "Show",
-          selection: Binding(
-            get: { store.unreadOnly },
-            set: { value in Task { await store.setUnreadOnly(value) } })
-        ) {
-          Text("Unread").tag(true)
-          Text("All").tag(false)
-        }
-      } label: {
-        Label("Show", systemImage: "line.3.horizontal.decrease.circle")
-      }
+    } message: {
+      Text("This can't be undone.")
     }
   }
 }
 
 extension ItemListView {
+  /// The unread items Mark all as read would mark.
+  private var markAllCount: Int { store.source.map(store.unread(in:)) ?? 0 }
+
+  private var markAllTitle: String {
+    let list = store.source.map(store.title(for:)) ?? ""
+    return markAllCount == 1
+      ? "Mark the unread item in \(list) as read?"
+      : "Mark all \(markAllCount) unread items in \(list) as read?"
+  }
+
   /// Marks an item read if it left the screen off the top: the user is
   /// scrolling and rows below it are still showing. Rows leaving because the
   /// list itself goes away (opening an article) happen while not scrolling.

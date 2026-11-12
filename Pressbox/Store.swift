@@ -111,6 +111,16 @@ final class Store {
     feedsTagged(tag).reduce(0) { $0 + $1.unread }
   }
 
+  /// Unread items in a list; Mark all as read marks these.
+  func unread(in source: Source) -> Int {
+    switch source {
+    case .all: totalUnread
+    case .feed(let id): feeds.first { $0.id == id }?.unread ?? 0
+    case .tag(let tag): unread(tagged: tag)
+    default: 0
+    }
+  }
+
   private var api: APIClient { APIClient(server: server, token: token) }
 
   func title(for source: Source) -> String {

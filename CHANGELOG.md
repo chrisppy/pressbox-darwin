@@ -48,8 +48,8 @@ through API v1 (`/api/v1`).
   sidebar pick it up from the system. iOS 18 looks as before. Building now needs
   Xcode 26.
 - Controls are grouped together in the middle of a bottom toolbar, within thumb
-  reach: Settings and Refresh under the feeds; Mark all as read and the
-  Unread/All filter under the items, with search beside them (moved down on iOS
+  reach: Settings and Refresh under the feeds; an Unread only toggle under the
+  items, with search beside it (moved down on iOS
   26); star, read, share and Safari under an article, and under an episode Play,
   Up Next, Download and a More menu with the rest: Watch Video, Chapters and
   Transcript when the episode has them, then star, read, share and Safari. An
@@ -81,6 +81,8 @@ through API v1 (`/api/v1`).
   show through the App Group `group.org.red-oxide.pressbox`, and background
   refresh now runs whenever a server is set, to keep them current, not only for
   the badge. Items open from the widgets with `pressbox://item/ID` links.
+- Mark all as read moved from the items' bottom bar to the top, out of easy
+  reach, and asks first, saying how many items it will mark.
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.

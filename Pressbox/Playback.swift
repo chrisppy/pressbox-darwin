@@ -151,8 +151,12 @@ final class Playback {
     endObserver = NotificationCenter.default.addObserver(
       forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main
     ) { [weak self] _ in
-      MainActor.assumeIsolated {
-        Task { await self?.finish() }
+      // As in the status observer: an explicitly main-actor task. A bare
+      // `Task { await self?.finish() }` is ambiguous between Task's
+      // initializers with the iOS 26 SDK.
+      Task { @MainActor in
+        guard let self else { return }
+        await self.finish()
       }
     }
     player.replaceCurrentItem(with: playerItem)

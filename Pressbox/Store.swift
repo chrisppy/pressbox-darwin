@@ -15,7 +15,7 @@ import UserNotifications
 @MainActor
 @Observable
 final class Store {
-  static let refreshTaskID = "org.red-oxide.pressbox.refresh"
+  nonisolated static let refreshTaskID = "org.red-oxide.pressbox.refresh"
 
   var feeds: [Feed] = []
   var items: [Item] = []

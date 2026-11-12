@@ -107,7 +107,8 @@ final class Playback {
     }
     guard let media = episode.media,
       let enclosure = video ? media.video : media.audio,
-      let url = URL(string: enclosure.url)
+      // A downloaded file, when there is one.
+      let url = Downloads.shared.file(for: episode.id, video: video) ?? URL(string: enclosure.url)
     else { return }
     let switching = item?.id == episode.id
     await stop()

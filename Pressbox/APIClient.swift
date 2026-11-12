@@ -110,6 +110,15 @@ struct APIClient {
     return try decode(ItemPage.self, try await send("GET", "/api/v1/items", query: query))
   }
 
+  /// The newest unread episodes (items with media), newest first.
+  func unreadEpisodes(limit: Int) async throws -> [Item] {
+    let query = [
+      URLQueryItem(name: "unread", value: "true"), URLQueryItem(name: "media", value: "true"),
+      URLQueryItem(name: "limit", value: String(limit)),
+    ]
+    return try decode(ItemPage.self, try await send("GET", "/api/v1/items", query: query)).items
+  }
+
   func item(_ id: Int64) async throws -> Item {
     try decode(Item.self, try await send("GET", "/api/v1/items/\(id)"))
   }

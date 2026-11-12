@@ -234,7 +234,20 @@ final class Store {
     updateBadge()
     saveCache()
     updateWidgets()
+    await syncDownloads()
     await prefetchUnread()
+  }
+
+  /// Downloads the newest unread episodes, and removes downloads done with.
+  private func syncDownloads() async {
+    guard let unread = try? await api.unreadEpisodes(limit: 50) else { return }
+    await Downloads.shared.sync(unread: unread, api: api)
+  }
+
+  /// Deletes an episode's download, unless it is the one playing.
+  private func dropDownload(_ id: Int64) {
+    guard playback.item?.id != id else { return }
+    Downloads.shared.remove(id)
   }
 
   func loadItems() async throws {
@@ -319,6 +332,7 @@ final class Store {
     await setRead(current, true)
     // Already read (played again), marking it read changed nothing.
     if isQueued(item) { await dequeue(item) }
+    dropDownload(item.id)
   }
 
   // MARK: Up Next
@@ -387,6 +401,7 @@ final class Store {
     if value {
       queue.removeAll { $0.id == item.id }
       latestUnread.removeAll { $0.id == item.id }
+      dropDownload(item.id)
     }
     if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
       feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
@@ -551,6 +566,7 @@ final class Store {
     hasQueue = false
     latestUnread = []
     updateWidgets()
+    Downloads.shared.removeAll()
     outbox = Outbox()
     Cache.clear()
   }
@@ -636,6 +652,10 @@ final class Store {
     var snapshot = WidgetStore.load()
     snapshot.configured = true
     snapshot.unread = unread
+    // New episodes, downloaded while the app is away.
+    if let episodes = try? await api.unreadEpisodes(limit: 50) {
+      await Downloads.shared.sync(unread: episodes, api: api)
+    }
     if let latest = try? await api.items(source: .all, unreadOnly: true, limit: 8).items {
       let titles = Dictionary(feeds.map { ($0.id, $0.title) }, uniquingKeysWith: { a, _ in a })
       snapshot.latest = latest.map {

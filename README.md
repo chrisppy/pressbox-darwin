@@ -67,6 +67,20 @@ Server is ⇧⌘R, and each column's buttons are in the window toolbar.
 The Server section shows the address, the signed-in user and device, and the
 server's version.
 
+### Downloads
+
+Episodes can be saved to play without a connection. The audio of the 10 newest
+unread episodes downloads by itself as they come in (turn it off in Settings),
+and any episode's audio or video downloads from the button above its article,
+which also shows the progress and removes it. Lists mark saved episodes with a
+filled arrow. Downloads carry on with the app closed.
+
+Settings › Downloads chooses **Wi-Fi only** (the default) or **Wi-Fi and
+cellular** on iPhone and iPad, shows the space used, and removes everything. A
+download is removed once its episode is finished or read (here or in any other
+client), and an automatic one once it is no longer among the 10 newest unread.
+Streams (HLS) can't be saved, so an episode that only has one plays online.
+
 ### Widgets
 
 Two widgets, for the Home Screen and Today view on iPhone and iPad and the

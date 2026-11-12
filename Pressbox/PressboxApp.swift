@@ -26,6 +26,10 @@ struct PressboxApp: App {
       .backgroundTask(.appRefresh(Store.refreshTaskID)) {
         await Store.backgroundRefresh()
       }
+      // Episode downloads that finished while the app was away.
+      .backgroundTask(.urlSession(Downloads.sessionID)) {
+        await Downloads.shared.handleBackgroundEvents()
+      }
     #endif
   }
 }

@@ -180,6 +180,14 @@ struct ItemRow: View {
         if let episodeSymbol {
           Image(systemName: episodeSymbol).foregroundStyle(Color.accentColor)
         }
+        switch Downloads.shared.state(item.id) {
+        case .saved:
+          Image(systemName: "arrow.down.circle.fill").accessibilityLabel("Downloaded")
+        case .downloading:
+          Image(systemName: "arrow.down.circle.dotted").accessibilityLabel("Downloading")
+        default:
+          EmptyView()
+        }
         if item.starred {
           Image(systemName: "star.fill").foregroundStyle(Theme.star)
         }

@@ -63,6 +63,7 @@ struct EpisodeHeader: View {
             .secondaryButtonStyle()
             .labelStyle(.iconOnly)
         }
+        DownloadButton(item: current)
         if store.hasQueue {
           let queued = store.isQueued(item)
           Button(
@@ -115,6 +116,73 @@ struct EpisodeHeader: View {
           }
       }
       .macSheetSize(width: 480, height: 600)
+    }
+  }
+}
+
+/// Saves an episode to play offline: its audio, or its video; shows the
+/// progress, and removes it.
+struct DownloadButton: View {
+  let item: Item
+
+  var body: some View {
+    let downloads = Downloads.shared
+    let canVideo = Downloads.canDownload(item, video: true)
+    let state = downloads.state(item.id)
+    if Downloads.canDownload(item) {
+      Menu {
+        switch state {
+        case .none:
+          Button("Download", systemImage: "arrow.down.circle") { downloads.download(item) }
+          if canVideo {
+            Button("Download Video", systemImage: "play.rectangle") {
+              downloads.download(item, video: true)
+            }
+          }
+        case .downloading(let fraction):
+          Text("Downloading, \(Int(fraction * 100))%")
+          Button("Cancel Download", systemImage: "xmark.circle", role: .destructive) {
+            downloads.remove(item.id)
+          }
+        case .saved(let download):
+          Text(
+            "\(download.kind == .video ? "Video" : "Audio") saved, "
+              + ByteCountFormatter.string(fromByteCount: download.bytes, countStyle: .file))
+          if download.kind == .audio && canVideo {
+            Button("Download Video Instead", systemImage: "play.rectangle") {
+              downloads.download(item, video: true)
+            }
+          }
+          Button("Remove Download", systemImage: "trash", role: .destructive) {
+            downloads.remove(item.id)
+          }
+        case .failed(let message):
+          Text("Download failed: \(message)")
+          Button("Try Again", systemImage: "arrow.clockwise") { downloads.download(item) }
+        }
+      } label: {
+        Label(Self.title(state), systemImage: Self.symbol(state))
+      }
+      .secondaryButtonStyle()
+      .labelStyle(.iconOnly)
+    }
+  }
+
+  static func title(_ state: Downloads.State) -> String {
+    switch state {
+    case .none: "Download"
+    case .downloading: "Downloading"
+    case .saved: "Downloaded"
+    case .failed: "Download failed"
+    }
+  }
+
+  static func symbol(_ state: Downloads.State) -> String {
+    switch state {
+    case .none: "arrow.down.circle"
+    case .downloading: "arrow.down.circle.dotted"
+    case .saved: "arrow.down.circle.fill"
+    case .failed: "exclamationmark.circle"
     }
   }
 }

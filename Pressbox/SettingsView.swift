@@ -43,6 +43,7 @@ struct SettingsView: View {
           } footer: {
             Text(Self.optionsFooter)
           }
+          downloadsSection
           Section {
             Button("Forget this device", role: .destructive) { confirmForget = true }
           } footer: {
@@ -171,6 +172,36 @@ struct SettingsView: View {
 }
 
 extension SettingsView {
+  /// Episodes saved to play offline: automatic downloads, the network they
+  /// use, and the space they take.
+  @ViewBuilder fileprivate var downloadsSection: some View {
+    @Bindable var downloads = Downloads.shared
+    Section {
+      Toggle("Download new episodes", isOn: $downloads.automatic)
+      #if os(iOS)
+        Picker("Download over", selection: $downloads.cellular) {
+          Text("Wi-Fi only").tag(false)
+          Text("Wi-Fi and cellular").tag(true)
+        }
+      #endif
+      LabeledContent(
+        "Saved",
+        value: downloads.saved.isEmpty
+          ? "None"
+          : "\(downloads.saved.count) episodes, "
+            + ByteCountFormatter.string(fromByteCount: downloads.bytesUsed, countStyle: .file))
+      Button("Remove All Downloads", role: .destructive) { downloads.removeAll() }
+        .disabled(downloads.saved.isEmpty && downloads.progress.isEmpty)
+    } header: {
+      Text("Downloads")
+    } footer: {
+      Text(Self.downloadsFooter)
+    }
+  }
+
+  fileprivate static let downloadsFooter =
+    "The audio of the \(Downloads.automaticLimit) newest unread episodes is downloaded as they come in; download video, or any other episode, from its page. Downloads are removed once an episode is finished or read, and automatic ones once they're no longer among the newest unread."
+
   /// The app's version and build, which tells TestFlight builds apart.
   @ViewBuilder fileprivate var aboutSection: some View {
     Section {

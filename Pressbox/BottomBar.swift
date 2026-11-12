@@ -23,6 +23,10 @@ struct Navigation {
 
 extension EnvironmentValues {
   @Entry var navigation: Navigation?
+  /// The screen shows the episode playing above its bottom toolbar: every
+  /// screen when the columns are stacked, otherwise only the article's, so
+  /// it shows once.
+  @Entry var showsMiniPlayer = false
 }
 
 extension View {
@@ -40,6 +44,7 @@ extension View {
 
 private struct BottomControls<Buttons: View>: ViewModifier {
   @Environment(\.navigation) private var navigation
+  @Environment(\.showsMiniPlayer) private var showsMiniPlayer
   let search: Bool
   let buttons: Buttons
 
@@ -58,7 +63,10 @@ private struct BottomControls<Buttons: View>: ViewModifier {
 
   #if os(iOS)
     @ViewBuilder private func iOSBody(content: Content) -> some View {
+      // Inside the screen, so the mini player sits above its toolbar
+      // rather than over it.
       let screen = content.navigationBarBackButtonHidden(navigation != nil)
+        .miniPlayerAbove(showsMiniPlayer)
       if #available(iOS 26, *) {
         screen
           .toolbar {
@@ -99,6 +107,18 @@ private struct BottomControls<Buttons: View>: ViewModifier {
 }
 
 #if os(iOS)
+  extension View {
+    /// The episode playing, along the bottom of the screen, above its
+    /// toolbar.
+    @ViewBuilder func miniPlayerAbove(_ shown: Bool = true) -> some View {
+      if shown {
+        safeAreaInset(edge: .bottom, spacing: 0) { MiniPlayer() }
+      } else {
+        self
+      }
+    }
+  }
+
   /// Keeps swipe-from-the-edge going back on screens whose navigation-bar Back
   /// button is hidden, which otherwise turns the gesture off.
   extension UINavigationController: @retroactive UIGestureRecognizerDelegate {

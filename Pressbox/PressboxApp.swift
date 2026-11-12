@@ -73,9 +73,11 @@ struct ContentView: View {
   var body: some View {
     NavigationSplitView {
       FeedListView(showSettings: $showSettings)
+        .environment(\.showsMiniPlayer, stacked)
     } content: {
       ItemListView(selection: $selectedItem)
         .environment(\.navigation, stacked ? Navigation(back: { store.source = nil }) : nil)
+        .environment(\.showsMiniPlayer, stacked)
     } detail: {
       if let id = selectedItem, let item = store.item(id) {
         ArticleView(item: item)
@@ -88,16 +90,24 @@ struct ContentView: View {
                   selectedItem = nil
                   store.source = nil
                 }) : nil)
+          .environment(\.showsMiniPlayer, true)
       } else {
         ContentUnavailableView("No item selected", systemImage: "doc.text")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .themedScreen()
+          #if os(iOS)
+            .miniPlayerAbove()
+          #endif
       }
     }
-    // The episode playing, over every screen's controls.
-    .safeAreaInset(edge: .bottom, spacing: 0) {
-      MiniPlayer()
-    }
+    #if os(macOS)
+      // The episode playing, along the bottom of the window. On iPhone and
+      // iPad each screen has it above its bottom toolbar instead (see
+      // `bottomControls`).
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        MiniPlayer()
+      }
+    #endif
     .settings(isPresented: $showSettings)
     // pressbox://item/123, from the widgets.
     .onOpenURL { url in

@@ -8,25 +8,21 @@ struct ArticleView: View {
   @Environment(Store.self) private var store
   let item: Item
   @State private var full: Item?
+  @State private var showChapters = false
+  @State private var showTranscript = false
 
   /// The list's copy, so read/starred changes show immediately.
   private var current: Item { store.item(item.id) ?? item }
 
   var body: some View {
-    VStack(spacing: 0) {
-      if current.isEpisode {
-        EpisodeHeader(item: current)
+    Group {
+      if let full {
+        HTMLView(
+          html: Self.page(for: full, feedTitle: store.feedTitle(full.feedId)),
+          baseURL: full.link)
+      } else {
+        ProgressView()
       }
-      Group {
-        if let full {
-          HTMLView(
-            html: Self.page(for: full, feedTitle: store.feedTitle(full.feedId)),
-            baseURL: full.link)
-        } else {
-          ProgressView()
-        }
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .themedScreen()
@@ -46,12 +42,24 @@ struct ArticleView: View {
         }
         DownloadButton(item: current)
         Menu("More", systemImage: "ellipsis.circle") {
+          EpisodeExtras(
+            item: current, showChapters: $showChapters, showTranscript: $showTranscript)
+          if hasExtras { Divider() }
           itemActions
         }
       } else {
         itemActions
       }
     }
+    .episodeSheets(item: current, chapters: $showChapters, transcript: $showTranscript)
+  }
+
+  /// The episode has a video (not the one downloaded), chapters or a
+  /// transcript, so More lists them.
+  private var hasExtras: Bool {
+    guard let media = current.media else { return false }
+    return (media.video != nil && !Playback.downloadedVideo(current)) || media.chapters != nil
+      || media.hasTranscript
   }
 
   /// Star, read, share and open: the bar for an article, More for an episode.
@@ -89,9 +97,23 @@ struct ArticleView: View {
       .replacingOccurrences(of: "\"", with: "&quot;")
   }
 
+  /// An episode's length, season and number, and where it was left (as of
+  /// opening it: the page isn't redrawn while it plays).
+  private static func episodeFacts(_ item: Item) -> [String?] {
+    guard let media = item.media else { return [] }
+    var facts: [String?] = [media.duration.map { formatTime(Double($0)) }]
+    switch (media.season, media.episode) {
+    case (let s?, let e?): facts.append("Season \(s), episode \(e)")
+    case (nil, let e?): facts.append("Episode \(e)")
+    default: break
+    }
+    if item.resumeAt > 0 { facts.append("Left at \(formatTime(Double(item.resumeAt)))") }
+    return facts
+  }
+
   static func page(for item: Item, feedTitle: String) -> String {
     let date = item.publishedDate.formatted(date: .abbreviated, time: .shortened)
-    let meta = [feedTitle, item.author, date]
+    let meta = ([feedTitle, item.author, date] + episodeFacts(item))
       .compactMap { $0 }
       .map(escape)
       .joined(separator: " · ")

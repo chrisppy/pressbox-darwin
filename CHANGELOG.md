@@ -51,10 +51,12 @@ through API v1 (`/api/v1`).
   reach: Settings and Refresh under the feeds; Mark all as read and the
   Unread/All filter under the items, with search beside them (moved down on iOS
   26); star, read, share and Safari under an article, and under an episode Play,
-  Up Next, Download and a More menu with the rest (the header above it keeps
-  Video, Chapters and Transcript). On iPhone, Back (and Home, to the feed list,
-  from an article) lead the group; the feed list has neither. Swiping from the
-  edge still goes back.
+  Up Next, Download and a More menu with the rest: Watch Video, Chapters and
+  Transcript when the episode has them, then star, read, share and Safari. An
+  episode has no header above it; its length, number and where it was left are
+  in its byline. On iPhone, Back (and Home, to the feed list, from an article)
+  lead the group; the feed list has neither. Swiping from the edge still goes
+  back.
 - Changes made offline are kept and sent later: marking items read or unread,
   starring, podcast positions, and an episode finishing while offline (which
   used to leave it unread). They show in the app at once, wait on disk while the

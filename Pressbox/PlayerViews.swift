@@ -4,97 +4,82 @@
 import AVKit
 import SwiftUI
 
-/// Above an episode's article: watch, chapters, transcript and its details.
-/// Play, Up Next and Download are in the bottom bar (see `ArticleView`).
-struct EpisodeHeader: View {
+/// The extras an episode's More menu offers: watch the video, its chapters,
+/// its transcript; each only when the episode has one.
+struct EpisodeExtras: View {
   @Environment(Store.self) private var store
   let item: Item
-  @State private var showChapters = false
-  @State private var showTranscript = false
-  @State private var chapters: [Chapter] = []
-
-  private var playback: Playback { store.playback }
-  private var media: Media? { item.media }
-  private var current: Item { store.item(item.id) ?? item }
-  /// Play plays the video when that is what was downloaded.
-  private var playsVideo: Bool { Playback.downloadedVideo(item) }
-  private var playingVideo: Bool { playback.isCurrent(item) && playback.isVideo }
-
-  private var facts: String {
-    var parts: [String] = []
-    if let d = media?.duration { parts.append(formatTime(Double(d))) }
-    // Where Play resumes, now the button is only an icon.
-    if !playback.isCurrent(item), current.resumeAt > 0 {
-      parts.append("Left at \(formatTime(Double(current.resumeAt)))")
-    }
-    switch (media?.season, media?.episode) {
-    case (let s?, let e?): parts.append("Season \(s), episode \(e)")
-    case (nil, let e?): parts.append("Episode \(e)")
-    default: break
-    }
-    return parts.joined(separator: " · ")
-  }
+  @Binding var showChapters: Bool
+  @Binding var showTranscript: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(spacing: 8) {
-        // With the video downloaded, Play already plays it.
-        if media?.video != nil && !playsVideo {
-          Button(
-            playingVideo && playback.isPlaying ? "Pause" : "Video",
-            systemImage: playingVideo && playback.isPlaying ? "pause.fill" : "play.rectangle"
-          ) {
-            Task { await playback.play(current, video: true) }
-          }
-          .secondaryButtonStyle()
-          .labelStyle(.iconOnly)
-        }
-        if media?.chapters != nil {
-          Button("Chapters", systemImage: "list.bullet") { showChapters = true }
-            .secondaryButtonStyle()
-            .labelStyle(.iconOnly)
-        }
-        if media?.hasTranscript ?? false {
-          Button("Transcript", systemImage: "text.quote") { showTranscript = true }
-            .secondaryButtonStyle()
-            .labelStyle(.iconOnly)
-        }
-      }
-      if !facts.isEmpty {
-        Text(facts).font(.footnote).foregroundStyle(.secondary)
+    let playback = store.playback
+    let media = item.media
+    let playingVideo = playback.isCurrent(item) && playback.isVideo
+    // With the video downloaded, Play already plays it.
+    if media?.video != nil && !Playback.downloadedVideo(item) {
+      Button(
+        playingVideo && playback.isPlaying ? "Pause Video" : "Watch Video",
+        systemImage: playingVideo && playback.isPlaying ? "pause.fill" : "play.rectangle"
+      ) {
+        Task { await playback.play(store.item(item.id) ?? item, video: true) }
       }
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 20)
-    .padding(.top, 12)
-    .sheet(isPresented: $showChapters) {
-      NavigationStack {
-        ChapterList(item: item, chapters: playback.isCurrent(item) ? playback.chapters : chapters)
-          .navigationTitle("Chapters")
-          .inlineTitle()
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { showChapters = false }
+    if media?.chapters != nil {
+      Button("Chapters", systemImage: "list.bullet") { showChapters = true }
+    }
+    if media?.hasTranscript ?? false {
+      Button("Transcript", systemImage: "text.quote") { showTranscript = true }
+    }
+  }
+}
+
+extension View {
+  /// The sheets `EpisodeExtras` opens: chapters and transcript.
+  func episodeSheets(item: Item, chapters: Binding<Bool>, transcript: Binding<Bool>) -> some View {
+    modifier(EpisodeSheets(item: item, showChapters: chapters, showTranscript: transcript))
+  }
+}
+
+private struct EpisodeSheets: ViewModifier {
+  @Environment(Store.self) private var store
+  let item: Item
+  @Binding var showChapters: Bool
+  @Binding var showTranscript: Bool
+  @State private var chapters: [Chapter] = []
+
+  func body(content: Content) -> some View {
+    let playback = store.playback
+    content
+      .sheet(isPresented: $showChapters) {
+        NavigationStack {
+          ChapterList(item: item, chapters: playback.isCurrent(item) ? playback.chapters : chapters)
+            .navigationTitle("Chapters")
+            .inlineTitle()
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { showChapters = false }
+              }
             }
-          }
+        }
+        .presentationDetents([.medium, .large])
+        .macSheetSize(width: 420, height: 480)
+        .task {
+          if chapters.isEmpty { chapters = await store.chapters(for: item) }
+        }
       }
-      .presentationDetents([.medium, .large])
-      .macSheetSize(width: 420, height: 480)
-      .task {
-        if chapters.isEmpty { chapters = await store.chapters(for: item) }
-      }
-    }
-    .sheet(isPresented: $showTranscript) {
-      NavigationStack {
-        TranscriptView(item: item)
-          .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Done") { showTranscript = false }
+      .sheet(isPresented: $showTranscript) {
+        NavigationStack {
+          TranscriptView(item: item)
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { showTranscript = false }
+              }
             }
-          }
+        }
+        .macSheetSize(width: 480, height: 600)
       }
-      .macSheetSize(width: 480, height: 600)
-    }
+      .onChange(of: item.id) { chapters = [] }
   }
 }
 

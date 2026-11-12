@@ -267,7 +267,6 @@ struct MiniPlayer: View {
 struct NowPlayingView: View {
   @Environment(Store.self) private var store
   @Environment(\.dismiss) private var dismiss
-  @State private var scrubbing: Double?
   @State private var showChapters = false
   @State private var showTranscript = false
   @State private var showUpNext = false
@@ -290,7 +289,7 @@ struct NowPlayingView: View {
               .font(.subheadline)
               .foregroundStyle(.secondary)
           }
-          progress
+          ScrubBar()
           controls
           HStack(spacing: 24) {
             Button("\(Self.rateLabel(playback.rate))×") { playback.nextRate() }
@@ -373,34 +372,6 @@ struct NowPlayingView: View {
     rate == rate.rounded() ? String(Int(rate)) : String(format: "%g", rate)
   }
 
-  private var progress: some View {
-    let playback = store.playback
-    let duration = max(playback.duration ?? playback.position, 1)
-    let shown = scrubbing ?? playback.position
-    return VStack(spacing: 4) {
-      Slider(
-        value: Binding(get: { shown }, set: { scrubbing = $0 }),
-        in: 0...duration,
-        onEditingChanged: { editing in
-          if !editing, let to = scrubbing {
-            playback.seek(to: to)
-            scrubbing = nil
-          }
-        })
-      HStack {
-        Text(formatTime(shown))
-        Spacer()
-        if playback.isLoading {
-          ProgressView().controlSize(.small)
-        }
-        Spacer()
-        Text(playback.duration.map { "-" + formatTime($0 - shown) } ?? "")
-      }
-      .font(.caption.monospacedDigit())
-      .foregroundStyle(.secondary)
-    }
-  }
-
   private var controls: some View {
     let playback = store.playback
     return HStack(spacing: 32) {
@@ -432,6 +403,42 @@ struct NowPlayingView: View {
 }
 
 /// The episode's artwork, or the feed's.
+/// The progress slider and times. Dragging is its own state, kept out of
+/// the player around it: redrawing the player while dragging also redrew
+/// the video, which could leave it black while the audio played on.
+private struct ScrubBar: View {
+  @Environment(Store.self) private var store
+  @State private var scrubbing: Double?
+
+  var body: some View {
+    let playback = store.playback
+    let duration = max(playback.duration ?? playback.position, 1)
+    let shown = scrubbing ?? playback.position
+    VStack(spacing: 4) {
+      Slider(
+        value: Binding(get: { shown }, set: { scrubbing = $0 }),
+        in: 0...duration,
+        onEditingChanged: { editing in
+          if !editing, let to = scrubbing {
+            playback.seek(to: to)
+            scrubbing = nil
+          }
+        })
+      HStack {
+        Text(formatTime(shown))
+        Spacer()
+        if playback.isLoading {
+          ProgressView().controlSize(.small)
+        }
+        Spacer()
+        Text(playback.duration.map { "-" + formatTime($0 - shown) } ?? "")
+      }
+      .font(.caption.monospacedDigit())
+      .foregroundStyle(.secondary)
+    }
+  }
+}
+
 private struct Artwork: View {
   @Environment(Store.self) private var store
   let item: Item
@@ -559,7 +566,9 @@ extension View {
     }
 
     func updateNSView(_ view: AVPlayerView, context: Context) {
-      view.player = player
+      // Setting it again, even to the same player, reattaches the video
+      // layer; doing that on every redraw could leave the video black.
+      if view.player !== player { view.player = player }
     }
   }
 
@@ -588,7 +597,9 @@ extension View {
     }
 
     func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
-      controller.player = player
+      // Setting it again, even to the same player, reattaches the video
+      // layer; doing that on every redraw could leave the video black.
+      if controller.player !== player { controller.player = player }
     }
   }
 

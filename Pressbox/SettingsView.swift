@@ -58,6 +58,7 @@ struct SettingsView: View {
             Text(message).foregroundStyle(Theme.error)
           }
         }
+        aboutSection
       }
       .themedScreen()
       .navigationTitle("Settings")
@@ -170,6 +171,34 @@ struct SettingsView: View {
 }
 
 extension SettingsView {
+  /// The app's version and build, which tells TestFlight builds apart.
+  @ViewBuilder fileprivate var aboutSection: some View {
+    Section {
+      LabeledContent("Version") {
+        Text(Self.appVersion).textSelection(.enabled)
+      }
+      Link("Source code", destination: Self.repository)
+      Link("Changelog", destination: Self.repository.appending(path: "blob/master/CHANGELOG.md"))
+      Link("red-oxide.org", destination: URL(string: "https://red-oxide.org")!)
+    } header: {
+      Text("About")
+    } footer: {
+      Text(
+        "pressbox is free software, under the [Mozilla Public License 2.0](https://mozilla.org/MPL/2.0/)."
+      )
+    }
+  }
+
+  fileprivate static let repository = URL(string: "https://github.com/red-oxide/pressbox-darwin")!
+
+  /// "2026.11.0 (20261100.4)": the version, then the build.
+  fileprivate static var appVersion: String {
+    let info = Bundle.main.infoDictionary
+    let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+    let build = info?["CFBundleVersion"] as? String ?? "?"
+    return "\(version) (\(build))"
+  }
+
   fileprivate static var defaultDeviceName: String {
     #if os(macOS)
       Host.current().localizedName ?? "Mac"

@@ -58,6 +58,9 @@ through API v1 (`/api/v1`).
   used to leave it unread). They show in the app at once, wait on disk while the
   server can't be reached, and are sent before the next reload. The offline
   banner says when changes are waiting.
+- An About section at the bottom of Settings: the app's version and build (to
+  tell TestFlight builds apart), and links to the source code, the changelog,
+  red-oxide.org and the license.
 
 ## [0.1.0] - 2026-11-07
 

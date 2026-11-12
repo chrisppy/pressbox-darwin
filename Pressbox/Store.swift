@@ -138,7 +138,7 @@ final class Store {
       isOffline = false
     } catch is CancellationError {
     } catch let error as URLError where error.code == .cancelled {
-    } catch where Self.isConnectionError(error) {
+    } catch  where Self.isConnectionError(error) {
       isOffline = true
       errorMessage = nil
     } catch {
@@ -170,7 +170,7 @@ final class Store {
       try await api.submit(change)
       errorMessage = nil
       isOffline = false
-    } catch where Self.isConnectionError(error) || Self.isCancellation(error) {
+    } catch  where Self.isConnectionError(error) || Self.isCancellation(error) {
       isOffline = isOffline || Self.isConnectionError(error)
       outbox.add(change)
     } catch {
@@ -200,7 +200,7 @@ final class Store {
     while let change = outbox.changes.first {
       do {
         try await api.submit(change)
-      } catch where Self.isConnectionError(error) || Self.isCancellation(error) {
+      } catch  where Self.isConnectionError(error) || Self.isCancellation(error) {
         return
       } catch {
         // Refused: drop it.

@@ -71,8 +71,8 @@ server's version.
 
 Episodes can be saved to play without a connection. The audio of the 10 newest
 unread episodes downloads by itself as they come in (turn it off in Settings),
-and any episode's audio or video downloads from the button above its article,
-which also shows the progress and removes it. Lists mark saved episodes with a
+and any episode's audio or video downloads from the Download button in its
+bottom bar, which also shows the progress and removes it. Lists mark saved episodes with a
 filled arrow. Downloads carry on with the app closed.
 
 Settings › Downloads chooses **Wi-Fi only** (the default) or **Wi-Fi and

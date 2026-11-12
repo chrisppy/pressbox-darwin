@@ -38,23 +38,40 @@ struct ArticleView: View {
       full = await store.open(item)
     }
     .bottomControls {
-      Button(
-        current.starred ? "Unstar" : "Star",
-        systemImage: current.starred ? "star.fill" : "star"
-      ) {
-        Task { await store.setStarred(current, !current.starred) }
-      }
-      Button(
-        current.read ? "Mark unread" : "Mark read",
-        systemImage: current.read ? "circle" : "circle.fill"
-      ) {
-        Task { await store.setRead(current, !current.read) }
-      }
-      if let link = current.link {
-        ShareLink(item: link)
-        Link(destination: link) {
-          Label(Self.openInBrowser, systemImage: "safari")
+      if current.isEpisode {
+        // An episode's bar is for listening; the rest goes in More.
+        PlayButton(item: current)
+        if store.hasQueue {
+          UpNextButton(item: current)
         }
+        DownloadButton(item: current)
+        Menu("More", systemImage: "ellipsis.circle") {
+          itemActions
+        }
+      } else {
+        itemActions
+      }
+    }
+  }
+
+  /// Star, read, share and open: the bar for an article, More for an episode.
+  @ViewBuilder private var itemActions: some View {
+    Button(
+      current.starred ? "Unstar" : "Star",
+      systemImage: current.starred ? "star.fill" : "star"
+    ) {
+      Task { await store.setStarred(current, !current.starred) }
+    }
+    Button(
+      current.read ? "Mark unread" : "Mark read",
+      systemImage: current.read ? "circle" : "circle.fill"
+    ) {
+      Task { await store.setRead(current, !current.read) }
+    }
+    if let link = current.link {
+      ShareLink(item: link)
+      Link(destination: link) {
+        Label(Self.openInBrowser, systemImage: "safari")
       }
     }
   }

@@ -4,7 +4,8 @@
 import AVKit
 import SwiftUI
 
-/// Above an episode's article: play, watch, chapters and transcript.
+/// Above an episode's article: watch, chapters, transcript and its details.
+/// Play, Up Next and Download are in the bottom bar (see `ArticleView`).
 struct EpisodeHeader: View {
   @Environment(Store.self) private var store
   let item: Item
@@ -15,18 +16,9 @@ struct EpisodeHeader: View {
   private var playback: Playback { store.playback }
   private var media: Media? { item.media }
   private var current: Item { store.item(item.id) ?? item }
-  /// Play plays whatever is downloaded: the video, if that is what was
-  /// saved; otherwise the audio (from the file, or streamed).
+  /// Play plays the video when that is what was downloaded.
   private var playsVideo: Bool { Playback.downloadedVideo(item) }
-  /// Playing (or paused) the way Play plays it, or the way Video does.
-  private var playingPlay: Bool { playback.isCurrent(item) && playback.isVideo == playsVideo }
   private var playingVideo: Bool { playback.isCurrent(item) && playback.isVideo }
-
-  private var playLabel: String {
-    if playingPlay { return playback.isPlaying ? "Pause" : "Resume" }
-    if current.resumeAt > 0 { return "Resume from \(formatTime(Double(current.resumeAt)))" }
-    return "Play"
-  }
 
   private var facts: String {
     var parts: [String] = []
@@ -46,13 +38,6 @@ struct EpisodeHeader: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 8) {
-        Button(
-          playLabel, systemImage: playingPlay && playback.isPlaying ? "pause.fill" : "play.fill"
-        ) {
-          Task { await playback.play(current) }
-        }
-        .prominentButtonStyle()
-        .labelStyle(.iconOnly)
         // With the video downloaded, Play already plays it.
         if media?.video != nil && !playsVideo {
           Button(
@@ -73,24 +58,6 @@ struct EpisodeHeader: View {
           Button("Transcript", systemImage: "text.quote") { showTranscript = true }
             .secondaryButtonStyle()
             .labelStyle(.iconOnly)
-        }
-        DownloadButton(item: current)
-        if store.hasQueue {
-          let queued = store.isQueued(item)
-          Button(
-            queued ? "Remove from Up Next" : "Add to Up Next",
-            systemImage: queued ? "text.badge.checkmark" : "text.badge.plus"
-          ) {
-            Task {
-              if queued {
-                await store.dequeue(current)
-              } else {
-                await store.enqueue(current)
-              }
-            }
-          }
-          .secondaryButtonStyle()
-          .labelStyle(.iconOnly)
         }
       }
       if !facts.isEmpty {
@@ -127,6 +94,50 @@ struct EpisodeHeader: View {
           }
       }
       .macSheetSize(width: 480, height: 600)
+    }
+  }
+}
+
+/// Plays an episode, or pauses it: what is downloaded (the video, if that
+/// was saved), otherwise the audio.
+struct PlayButton: View {
+  @Environment(Store.self) private var store
+  let item: Item
+
+  var body: some View {
+    let playback = store.playback
+    let current = store.item(item.id) ?? item
+    let playsVideo = Playback.downloadedVideo(item)
+    // Playing (or paused) the way this button plays it.
+    let mine = playback.isCurrent(item) && playback.isVideo == playsVideo
+    let label =
+      mine
+      ? (playback.isPlaying ? "Pause" : "Resume")
+      : current.resumeAt > 0 ? "Resume from \(formatTime(Double(current.resumeAt)))" : "Play"
+    Button(label, systemImage: mine && playback.isPlaying ? "pause.fill" : "play.fill") {
+      Task { await playback.play(current) }
+    }
+  }
+}
+
+/// Adds an episode to Up Next, or takes it out.
+struct UpNextButton: View {
+  @Environment(Store.self) private var store
+  let item: Item
+
+  var body: some View {
+    let queued = store.isQueued(item)
+    Button(
+      queued ? "Remove from Up Next" : "Add to Up Next",
+      systemImage: queued ? "text.badge.checkmark" : "text.badge.plus"
+    ) {
+      Task {
+        if queued {
+          await store.dequeue(item)
+        } else {
+          await store.enqueue(item)
+        }
+      }
     }
   }
 }
@@ -174,7 +185,6 @@ struct DownloadButton: View {
       } label: {
         Label(Self.title(state), systemImage: Self.symbol(state))
       }
-      .secondaryButtonStyle()
       .labelStyle(.iconOnly)
     }
   }
@@ -589,7 +599,7 @@ struct UpNextView: View {
           ContentUnavailableView(
             "Up Next is empty", systemImage: NowPlayingView.upNextSymbol,
             description: Text(
-              "Swipe an episode in a list, or use Add to Up Next above it, to queue it."))
+              "Swipe an episode in a list, or use Add to Up Next in its bottom bar, to queue it."))
         }
       }
       .navigationTitle("Up Next")

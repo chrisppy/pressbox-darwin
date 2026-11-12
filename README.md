@@ -107,8 +107,9 @@ and Safari. Its byline adds the length, season and episode, and where it was
 left. Opening an episode doesn't mark it read; playing it to the end (or
 stopping in its last 30 seconds) does.
 
-While an episode plays, a bar sits above the controls of every screen; tap it
-for the full player: artwork (the chapter's, when it has one), a scrubber, back
+While an episode plays, a bar sits above the controls of every screen but an
+episode's own (whose bottom bar has Play, and Now Playing in More); tap it for
+the full player: artwork (the chapter's, when it has one), a scrubber, back
 10 / forward 30 seconds, previous and next chapter, the speed (1× to 2×, and
 0.75×, keeping the pitch), AirPlay, the chapter list and the transcript, which
 follows along and jumps where you tap. Audio keeps playing in the background and

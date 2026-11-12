@@ -74,6 +74,11 @@ struct ContentView: View {
     private let stacked = false
   #endif
 
+  /// The article column shows an episode.
+  private var episodeOpen: Bool {
+    selectedItem.flatMap { store.item($0) }?.isEpisode ?? false
+  }
+
   var body: some View {
     NavigationSplitView {
       FeedListView(showSettings: $showSettings)
@@ -81,7 +86,9 @@ struct ContentView: View {
     } content: {
       ItemListView(selection: $selectedItem)
         .environment(\.navigation, stacked ? Navigation(back: { store.source = nil }) : nil)
-        .environment(\.showsMiniPlayer, stacked)
+        // Side by side, it moves here from the article column while an
+        // episode is open there.
+        .environment(\.showsMiniPlayer, stacked || episodeOpen)
     } detail: {
       if let id = selectedItem, let item = store.item(id) {
         ArticleView(item: item)
@@ -95,7 +102,9 @@ struct ContentView: View {
                   store.source = nil
                 }) : nil
           )
-          .environment(\.showsMiniPlayer, true)
+          // An episode's bottom bar has Play, so the mini player stays off
+          // its page.
+          .environment(\.showsMiniPlayer, !item.isEpisode)
       } else {
         ContentUnavailableView("No item selected", systemImage: "doc.text")
           .frame(maxWidth: .infinity, maxHeight: .infinity)

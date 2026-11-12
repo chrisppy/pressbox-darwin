@@ -616,7 +616,7 @@ extension View {
   }
 
   /// Sheets on Mac have no size of their own.
-  @ViewBuilder fileprivate func macSheetSize(width: CGFloat, height: CGFloat) -> some View {
+  @ViewBuilder func macSheetSize(width: CGFloat, height: CGFloat) -> some View {
     #if os(macOS)
       frame(minWidth: width, idealWidth: width, minHeight: height, idealHeight: height)
     #else

@@ -83,6 +83,9 @@ through API v1 (`/api/v1`).
   the badge. Items open from the widgets with `pressbox://item/ID` links.
 - Mark all as read moved from the items' bottom bar to the top, out of easy
   reach, and asks first, saying how many items it will mark.
+- The mini player stays off an episode's page, whose bottom bar already has
+  Play; its More menu opens the full player (Now Playing) instead. On an iPad
+  with the columns side by side, the mini player moves under the item list.
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.

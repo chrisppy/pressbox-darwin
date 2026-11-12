@@ -10,6 +10,7 @@ struct ArticleView: View {
   @State private var full: Item?
   @State private var showChapters = false
   @State private var showTranscript = false
+  @State private var showPlayer = false
 
   /// The list's copy, so read/starred changes show immediately.
   private var current: Item { store.item(item.id) ?? item }
@@ -42,6 +43,11 @@ struct ArticleView: View {
         }
         DownloadButton(item: current)
         Menu("More", systemImage: "ellipsis.circle") {
+          // The mini player is off an episode's page; this opens the full one.
+          if store.playback.item != nil {
+            Button("Now Playing", systemImage: "waveform") { showPlayer = true }
+            Divider()
+          }
           EpisodeExtras(
             item: current, showChapters: $showChapters, showTranscript: $showTranscript)
           if hasExtras { Divider() }
@@ -52,6 +58,10 @@ struct ArticleView: View {
       }
     }
     .episodeSheets(item: current, chapters: $showChapters, transcript: $showTranscript)
+    .sheet(isPresented: $showPlayer) {
+      NowPlayingView()
+        .macSheetSize(width: 440, height: 640)
+    }
   }
 
   /// The episode has a video (not the one downloaded), chapters or a

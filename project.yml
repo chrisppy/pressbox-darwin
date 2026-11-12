@@ -62,3 +62,6 @@ targets:
         # playing (and video in picture in picture) in the background.
         UIBackgroundModes: [fetch, audio]
         BGTaskSchedulerPermittedIdentifiers: [org.red-oxide.pressbox.refresh]
+        # Only standard HTTPS, which is exempt from export compliance, so
+        # TestFlight doesn't ask about encryption on every build.
+        ITSAppUsesNonExemptEncryption: false

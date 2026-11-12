@@ -1,0 +1,110 @@
+# SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
+# SPDX-License-Identifier: MPL-2.0
+
+# Signs the iOS app and uploads it to TestFlight. Signing is automatic and
+# cloud-managed through an App Store Connect API key, so no certificate or
+# provisioning profile is kept in the repo or its secrets.
+#
+# Needs:
+#   secrets.ASC_KEY_ID      App Store Connect API key ID
+#   secrets.ASC_ISSUER_ID   App Store Connect issuer ID
+#   secrets.ASC_KEY_P8      contents of AuthKey_<id>.p8
+#   vars.APPLE_TEAM_ID      Apple Developer team ID
+
+name: TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["[0-9]*.[0-9]*.[0-9]*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: build and upload to TestFlight
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen
+
+      - name: Write the App Store Connect API key
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          key="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+          printf '%s\n' "$ASC_KEY_P8" > "$key"
+          chmod 600 "$key"
+          echo "ASC_KEY_PATH=$key" >> "$GITHUB_ENV"
+
+      - name: Archive
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          # The build number in project.yml (YYYYMMPP) plus the run number, so
+          # each upload of the same version is a new, higher build:
+          # 20261100.1, 20261100.2, then 20261101.3 for 2026.11.1.
+          base=$(sed -n 's/^ *CURRENT_PROJECT_VERSION: "\([0-9]*\)".*/\1/p' project.yml)
+          build="$base.$GITHUB_RUN_NUMBER"
+          echo "Build number: $build"
+          xcodebuild archive \
+            -project Pressbox.xcodeproj \
+            -scheme Pressbox \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Pressbox.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CURRENT_PROJECT_VERSION="$build"
+
+      - name: Export and upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Pressbox.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+
+      - name: Remove the API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP"/AuthKey_*.p8

@@ -29,6 +29,12 @@ final class Store {
   var errorMessage: String?
   /// The last load failed for lack of a connection; showing cached data.
   var isOffline = false
+  /// When the server last answered a request.
+  var lastContact: Date?
+  /// Why the server can't be used, though the network is up: it rejected
+  /// this device's token, failed with a server error, or couldn't be found
+  /// or connected to securely. `nil` when it is fine or not known.
+  var serverProblem: String?
   // What the Store+ files use is internal, not private (Swift's private ends
   // at the file); only the store and its extensions set these.
 
@@ -169,14 +175,48 @@ final class Store {
       try await body()
       errorMessage = nil
       isOffline = false
+      reached()
     } catch is CancellationError {
     } catch let error as URLError where error.code == .cancelled {
     } catch  where Self.isConnectionError(error) {
       isOffline = true
       errorMessage = nil
+      serverProblem = nil
     } catch {
       errorMessage = error.localizedDescription
+      failed(error)
     }
+  }
+
+  /// A request went through: the server is connected.
+  private func reached() {
+    lastContact = .now
+    serverProblem = nil
+  }
+
+  /// What a failed request says about the connection. Most HTTP errors
+  /// (an item the server no longer has, a request only admins may make) are
+  /// about the request: the server answered, so it is connected.
+  private func failed(_ error: Error) {
+    switch error {
+    case APIError.unauthorized, APIError.invalidServer, APIError.notConfigured:
+      serverProblem = error.localizedDescription
+    case APIError.status(let code) where code >= 500:
+      lastContact = .now
+      serverProblem = error.localizedDescription
+    case is APIError, is DecodingError:
+      reached()
+    default:
+      // A TLS failure, a name that can't be found, and the like.
+      serverProblem = error.localizedDescription
+    }
+  }
+
+  /// Asks the server who this device is, to show whether it is connected
+  /// (Settings).
+  func checkConnection() async {
+    guard isConfigured else { return }
+    await run { me = try await api.me() }
   }
 
   /// The server couldn't be reached: worth trying again later.
@@ -203,11 +243,13 @@ final class Store {
       try await api.submit(change)
       errorMessage = nil
       isOffline = false
+      reached()
     } catch  where Self.isConnectionError(error) || Self.isCancellation(error) {
       isOffline = isOffline || Self.isConnectionError(error)
       outbox.add(change)
     } catch {
       errorMessage = error.localizedDescription
+      failed(error)
       return false
     }
     return true

@@ -21,6 +21,7 @@ struct SettingsView: View {
       Form {
         if store.isConfigured {
           Section("Server") {
+            ConnectionStatus()
             LabeledContent("Address", value: store.server)
             if let version = store.serverVersion {
               LabeledContent("Version", value: "pressboxd \(version.version)")
@@ -85,7 +86,10 @@ struct SettingsView: View {
         Button("Forget", role: .destructive) { store.forget() }
       }
       .onAppear { server = store.server }
-      .task { await store.checkBadgeAllowed() }
+      .task {
+        await store.checkBadgeAllowed()
+        await store.checkConnection()
+      }
       .onDisappear { store.cancelPairing() }
     }
     .interactiveDismissDisabled(!store.isConfigured)
@@ -173,6 +177,91 @@ struct SettingsView: View {
       Text(
         "Enter the code another device shows while pairing. It's added to your account unless you name another user."
       )
+    }
+  }
+}
+
+/// Whether the server can be reached: connected, offline (with changes
+/// waiting to sync), or a problem such as a rejected token; and when it last
+/// answered. Check Now asks it again.
+private struct ConnectionStatus: View {
+  @Environment(Store.self) private var store
+
+  @State private var checking = false
+
+  private enum Status {
+    case checking, connected, offline, problem(String)
+  }
+
+  private var state: Status {
+    if store.isOffline { return .offline }
+    if let problem = store.serverProblem { return .problem(problem) }
+    if store.lastContact != nil { return .connected }
+    return .checking
+  }
+
+  var body: some View {
+    LabeledContent {
+      HStack(spacing: 6) {
+        if checking || store.isLoading {
+          ProgressView().controlSize(.small)
+        }
+        Button("Check Now") {
+          Task {
+            checking = true
+            await store.checkConnection()
+            checking = false
+          }
+        }
+        .disabled(checking || store.isLoading)
+      }
+    } label: {
+      VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 6) {
+          Circle().fill(color).frame(width: 10, height: 10)
+          Text(title)
+        }
+        .accessibilityElement(children: .combine)
+        if let detail {
+          detail.font(.footnote).foregroundStyle(.secondary)
+        }
+      }
+    }
+  }
+
+  private var title: String {
+    switch state {
+    case .checking: "Checking…"
+    case .connected: "Connected"
+    case .offline: "Offline"
+    case .problem: "Can't use the server"
+    }
+  }
+
+  private var color: Color {
+    switch state {
+    case .checking: .secondary
+    case .connected: Theme.read
+    case .offline: Theme.star
+    case .problem: Theme.error
+    }
+  }
+
+  private var detail: Text? {
+    switch state {
+    case .checking:
+      return nil
+    case .connected:
+      return store.lastContact.map { Text("Last answered \($0, style: .relative) ago") }
+    case .offline:
+      let waiting = store.outbox.changes.count
+      let reached = store.lastContact.map { Text("Last reached \($0, style: .relative) ago") }
+      guard waiting > 0 else { return reached ?? Text("Not reached since pressbox opened") }
+      let changes = Text(
+        waiting == 1 ? "1 change waiting to sync" : "\(waiting) changes waiting to sync")
+      return reached.map { Text("\($0). \(changes)") } ?? changes
+    case .problem(let message):
+      return Text(message)
     }
   }
 }

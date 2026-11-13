@@ -132,6 +132,11 @@ through API v1 (`/api/v1`).
   caught up offers Show All Items; an empty list offline, or one that failed to
   load, says so (with Try Again) instead of looking caught up; and a server with
   no feeds yet says where to add them.
+- Settings shows whether the server is connected, at the top of its Server
+  section: a green Connected with when it last answered, a yellow Offline with
+  how many changes are waiting to sync, or a red problem such as a rejected
+  token, a server error or a server that can't be found. Check Now asks again;
+  opening Settings checks too.
 
 ## [0.1.0] - 2026-11-07
 

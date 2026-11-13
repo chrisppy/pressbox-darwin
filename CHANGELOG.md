@@ -18,7 +18,7 @@ through API v1 (`/api/v1`).
   `just test` runs its unit tests with `swift test` on Linux or a Mac, and CI
   runs them on Linux too. `just test-app` runs all the tests in the iOS
   simulator, as `just test` did before.
-- A Mac app (macOS 15 or later) from the same target and sources as the iPhone
+- A Mac app (macOS 27 or later) from the same target and sources as the iPhone
   and iPad app, and the repository is renamed pressbox-darwin. On Mac the
   controls are in the window toolbar, search is in the title bar, Settings is
   its own window (⌘,), Reload is ⌘R, links open in the default browser, and the
@@ -46,14 +46,13 @@ through API v1 (`/api/v1`).
   uses.
 - Item lists page by cursor, which stays fast far down a long list; older
   servers without cursors are paged by offset as before.
-- Liquid Glass on iOS 26: the offline and error banners float as glass capsules,
-  the Unlock and Approve buttons use glass styles, and the article toolbar
-  splits into two glass groups. Navigation bars, toolbars, search and the
-  sidebar pick it up from the system. iOS 18 looks as before. Building now needs
-  Xcode 26.
+- Liquid Glass: the offline and error banners float as glass capsules, the
+  Unlock and Approve buttons use glass styles, and the article toolbar splits
+  into two glass groups. Navigation bars, toolbars, search and the sidebar pick
+  it up from the system.
 - Controls are grouped together in the middle of a bottom toolbar, within thumb
   reach: Settings and Refresh under the feeds; an Unread only toggle under the
-  items, with search beside it (moved down on iOS 26); star, read, share and
+  items, with search beside it; star, read, share and
   Safari under an article, and under an episode Play, Up Next, Download and a
   More menu with the rest: Watch Video, Chapters and Transcript when the episode
   has them, then star, read, share and Safari. An episode has no header above
@@ -143,9 +142,8 @@ through API v1 (`/api/v1`).
   with unread counts to match, and hides feeds with nothing of that kind.
   Turning off the only one on switches to the other. Mark all as read marks only
   the kind shown. The badge and the widgets still count everything.
-- Needs iOS 27 or macOS 27 (was iOS 18 and macOS 15), and Xcode 27 to build. The
-  fallbacks for systems without Liquid Glass are gone, and CI builds on GitHub's
-  xcode-27 runners.
+- Needs iOS 27 (was iOS 18), and Xcode 27 to build. CI builds on GitHub's
+  xcode-27 runners, and runs the Linux tests with Swift 6.4, the same compiler.
 
 ## [0.1.0] - 2026-11-07
 

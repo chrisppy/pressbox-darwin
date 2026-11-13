@@ -52,7 +52,7 @@ jobs:
   test-linux:
     name: test (Linux)
     runs-on: ubuntu-latest
-    container: swift:6.2
+    container: swift:6.4
 
     steps:
       - name: Checkout repository

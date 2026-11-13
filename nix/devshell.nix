@@ -23,7 +23,6 @@ _: {
         ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
           pkgs.swift
           pkgs.swiftpm
-          pkgs.swiftPackages.Foundation
           pkgs.llvm
         ];
       };

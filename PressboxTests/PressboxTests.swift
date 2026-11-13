@@ -212,7 +212,7 @@ struct ModelTests {
 
 struct ShowsTests {
   /// A feed decoded as from the API; `episodes` nil leaves out the counts,
-  /// as servers before 2026.11 do.
+  /// as servers before 26.0 do.
   private func feed(
     total: Int, unread: Int, episodes: Int?, unreadEpisodes: Int? = nil
   ) throws -> Feed {

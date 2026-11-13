@@ -95,7 +95,7 @@ struct FeedListView: View {
     }
     .bottomControls {
       Button("Settings", systemImage: "gear") { showSettings = true }
-      // Servers before 2026.11 don't say which feeds are podcasts.
+      // Servers before 26.0 don't say which feeds are podcasts.
       if store.canFilterKinds {
         kindToggles(store)
       }

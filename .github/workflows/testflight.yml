@@ -16,7 +16,7 @@ name: TestFlight
 on:
   workflow_dispatch:
   push:
-    tags: ["[0-9]*.[0-9]*.[0-9]*"]
+    tags: ["v[0-9]*.[0-9]*.[0-9]*"]
 
 permissions:
   contents: read
@@ -56,9 +56,9 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
         run: |
-          # The build number in project.yml (YYYYMMPP) plus the run number, so
-          # each upload of the same version is a new, higher build:
-          # 20261100.1, 20261100.2, then 20261101.3 for 2026.11.1.
+          # The build number in project.yml plus the run number, so each
+          # upload of the same version is a new, higher build: 26000000.1,
+          # 26000000.2, then 26000001.3 for 26.0.1.
           base=$(sed -n 's/^ *CURRENT_PROJECT_VERSION: "\([0-9]*\)".*/\1/p' project.yml)
           build="$base.$GITHUB_RUN_NUMBER"
           echo "Build number: $build"

@@ -1,18 +1,18 @@
 <!--
-SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
-SPDX-License-Identifier: MPL-2.0
--->
+SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org> SPDX-License-Identifier:
+MPL-2.0 -->
 
 # Changelog
 
 All notable changes to pressbox-darwin (formerly pressbox-ios). The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions
-are [calendar versions](https://calver.org/), `YYYY.M.PATCH`: the year and month
-of the release, then a count that starts at 0 each month (2026.11.0, 2026.11.1,
-2026.12.0). The app is versioned on its own; it talks to pressbox servers
+are [calendar versions](https://calver.org/), `YY.MINOR.PATCH`: the year of
+the release, then a count of that year's releases and a count of fixes to each,
+both starting at 0 (26.0.0, then 26.0.1 for a fix, 26.1.0, and 27.0.0 in
+January). The app is versioned on its own; it talks to pressbox servers
 through API v1 (`/api/v1`).
 
-## [2026.11.0] - Unreleased
+## [26.0.0] - Unreleased
 
 - Buttons, menu items, toggles, pickers and section headers use title-style
   capitalization, as the Human Interface Guidelines ask: Mark All as Read,
@@ -153,7 +153,7 @@ through API v1 (`/api/v1`).
   token, a server error or a server that can't be found. Check Now asks again;
   opening Settings checks too.
 - News and Podcasts toggles in the bottom bar of the feed list, All items and
-  Starred (needs a pressbox server that counts episodes, 2026.11): both on shows
+  Starred (needs a pressbox server that counts episodes, 26.0): both on shows
   everything; one on shows only news or only podcast episodes, in every list,
   with unread counts to match, and hides feeds with nothing of that kind.
   Turning off the only one on switches to the other. Mark all as read marks only
@@ -173,4 +173,4 @@ The first release.
   (off by default).
 
 [0.1.0]: https://github.com/chrisppy/pressbox-ios/releases/tag/v0.1.0
-[2026.11.0]: https://github.com/red-oxide/pressbox-darwin/compare/v0.1.0...v2026.11.0
+[26.0.0]: https://github.com/red-oxide/pressbox-darwin/compare/v0.1.0...v26.0.0

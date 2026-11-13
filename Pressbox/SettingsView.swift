@@ -366,7 +366,7 @@ extension SettingsView {
 
   fileprivate static let repository = URL(string: "https://github.com/red-oxide/pressbox-darwin")!
 
-  /// "2026.11.0 (20261100.4)": the version, then the build.
+  /// "26.0.0 (26000000.4)": the version, then the build.
   fileprivate static var appVersion: String {
     let info = Bundle.main.infoDictionary
     let version = info?["CFBundleShortVersionString"] as? String ?? "?"

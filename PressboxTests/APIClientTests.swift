@@ -214,7 +214,7 @@ struct APIClientExtrasTests {
   @Test func serverVersionAndWhoIAm() async throws {
     let (api, server) = StubServer.client { request in
       request.url?.path() == "/api/v1/version"
-        ? (200, #"{"version":"2026.11.0","api":1}"#)
+        ? (200, #"{"version":"26.0.0","api":1}"#)
         : (200, #"{"user":"chris","admin":true}"#)
     }
     #expect(try await api.version().api == 1)

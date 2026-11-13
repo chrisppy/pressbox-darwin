@@ -27,7 +27,7 @@ struct Shows: Codable, Equatable {
 }
 
 extension Feed {
-  /// The server counts each feed's episodes (2026.11 on), so podcasts can be
+  /// The server counts each feed's episodes (26.0 on), so podcasts can be
   /// told from news.
   var countsEpisodes: Bool { episodes != nil }
 

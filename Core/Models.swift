@@ -15,7 +15,7 @@ struct Feed: Codable, Identifiable, Hashable {
   var unread: Int
   let total: Int
   /// How many of `total` and `unread` are podcast episodes; `nil` from
-  /// servers before 2026.11, which don't count them.
+  /// servers before 26.0, which don't count them.
   let episodes: Int?
   var unreadEpisodes: Int?
   let lastFetched: Int64?

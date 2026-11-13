@@ -16,10 +16,11 @@ settings:
     # still 5: once a build has none, SWIFT_VERSION can go to 6 and they
     # become errors.
     SWIFT_STRICT_CONCURRENCY: complete
-    # Calendar versions, YYYY.M.PATCH (see CHANGELOG.md). The build number is
-    # the same as digits, YYYYMMPP, so it always increases.
-    MARKETING_VERSION: "2026.11.0"
-    CURRENT_PROJECT_VERSION: "20261100"
+    # Calendar versions, YY.MINOR.PATCH (see CHANGELOG.md). The build number
+    # is the same as digits, MINOR and PATCH three each (26.1.2 is 26001002),
+    # so it always increases, and is above the old YYYYMMPP build numbers.
+    MARKETING_VERSION: "26.0.0"
+    CURRENT_PROJECT_VERSION: "26000000"
     # Set your team here or in Xcode's Signing & Capabilities tab.
     DEVELOPMENT_TEAM: "NNK6LS7D28"
 targets:

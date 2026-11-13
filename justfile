@@ -32,8 +32,25 @@ test:
 
 # The same, then a line-coverage report of Core/ (Linux; on macOS use `xcrun llvm-cov`)
 coverage:
-    swift test --enable-code-coverage
-    llvm-cov report "$(swift build --show-bin-path)/PressboxPackageTests.xctest" -instr-profile="$(swift build --show-bin-path)/codecov/default.profdata" -ignore-filename-regex='PressboxTests|\.build'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # SwiftPM's --enable-code-coverage wants llvm-profdata beside swift, which
+    # nixpkgs' Swift lacks: instrument and merge by hand, with the devShell's
+    # LLVM. Its own build path, so `just test` doesn't rebuild every time.
+    out=.build/coverage
+    flags=(--build-path "$out" -Xswiftc -profile-generate -Xswiftc -profile-coverage-mapping)
+    rm -rf "$out/profiles"
+    LLVM_PROFILE_FILE="$PWD/$out/profiles/%p.profraw" swift test "${flags[@]}"
+    llvm-profdata merge -sparse "$out"/profiles/*.profraw -o "$out/coverage.profdata"
+    # Every object file of the build: they carry the coverage mapping wherever
+    # SwiftPM puts them (its layout changes between versions). The report
+    # keeps Core/ and drops the tests and generated sources.
+    mapfile -t objects < <(find "$out" -name '*.o' -type f)
+    [ "${#objects[@]}" -gt 0 ] || { echo "no object files under $out" >&2; exit 1; }
+    args=("${objects[0]}")
+    for o in "${objects[@]:1}"; do args+=(-object "$o"); done
+    llvm-cov report "${args[@]}" -instr-profile="$out/coverage.profdata" \
+      -ignore-filename-regex='PressboxTests/|\.build/|/nix/store/'
 
 # Run all the unit tests in an iPhone simulator, widgets' included (macOS)
 test-app: project

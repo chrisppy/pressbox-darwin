@@ -58,7 +58,9 @@ struct APIClientRequestTests {
   }
 
   @Test func needsAServer() async {
-    #expect(await apiError { _ = try await APIClient(server: "  ", token: nil).feeds() } == .notConfigured)
+    #expect(
+      await apiError { _ = try await APIClient(server: "  ", token: nil).feeds() } == .notConfigured
+    )
     #expect(
       await apiError { _ = try await APIClient(server: "example.com", token: nil).feeds() }
         == .invalidServer)
@@ -85,7 +87,8 @@ struct APIClientItemsTests {
       source: .feed("news"), unreadOnly: true, after: .cursor("c1"), limit: 20)
     #expect(page.next == .cursor("c2"))
     #expect(server.last?.path == "/api/v1/items")
-    #expect(server.last?.query == ["limit": "20", "feed": "news", "unread": "true", "cursor": "c1"])
+    #expect(
+      server.last?.query == ["limit": "20", "feed": "news", "unread": "true", "cursor": "c1"])
   }
 
   @Test func searchIgnoresUnreadOnly() async throws {
@@ -159,7 +162,9 @@ struct APIClientChangeTests {
 
   @Test func readsTheQueue() async throws {
     let (api, server) = StubServer.client(
-      body: #"{"items":[{"id":4,"feed_id":"pod","title":"Four","published":0,"read":false,"starred":false}]}"#)
+      body:
+        #"{"items":[{"id":4,"feed_id":"pod","title":"Four","published":0,"read":false,"starred":false}]}"#
+    )
     #expect(try await api.queue().map(\.id) == [4])
     #expect(server.last?.path == "/api/v1/queue")
   }

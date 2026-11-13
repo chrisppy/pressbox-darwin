@@ -3,11 +3,11 @@
 
 import Foundation
 
+@testable import Pressbox
+
 #if canImport(FoundationNetworking)
   import FoundationNetworking
 #endif
-
-@testable import Pressbox
 
 /// A fake pressboxd for `APIClient`: a `URLProtocol` that answers each request
 /// from a closure, with no network. Every client gets its own made-up host, so

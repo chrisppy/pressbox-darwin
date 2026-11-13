@@ -201,7 +201,9 @@ struct ModelTests {
   }
 
   @Test func pagesPreferCursors() throws {
-    let page = { (json: String) in try APIClient.decoder.decode(ItemPage.self, from: Data(json.utf8)) }
+    let page = { (json: String) in
+      try APIClient.decoder.decode(ItemPage.self, from: Data(json.utf8))
+    }
     #expect(try page(#"{"items":[],"next_cursor":"c","next_offset":5}"#).next == .cursor("c"))
     #expect(try page(#"{"items":[],"next_offset":5}"#).next == .offset(5))
     #expect(try page(#"{"items":[]}"#).next == nil)

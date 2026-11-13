@@ -1,45 +1,45 @@
 {
-  "color-space-for-untagged-svg-colors" : "srgb",
-  "fill" : {
-    "solid" : "srgb:0.04314,0.04314,0.04314,1.00000"
+  "color-space-for-untagged-svg-colors": "srgb",
+  "fill": {
+    "solid": "srgb:0.04314,0.04314,0.04314,1.00000"
   },
-  "groups" : [
+  "groups": [
     {
-      "layers" : [
+      "layers": [
         {
-          "glass" : true,
-          "image-name" : "2-headlines.svg",
-          "name" : "2-headlines"
+          "glass": true,
+          "image-name": "2-headlines.svg",
+          "name": "2-headlines"
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
+      "translucency": {
+        "enabled": false,
+        "value": 0.5
       }
     },
     {
-      "layers" : [
+      "layers": [
         {
-          "glass" : true,
-          "image-name" : "1-plate.svg",
-          "name" : "1-plate"
+          "glass": true,
+          "image-name": "1-plate.svg",
+          "name": "1-plate"
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.3
+      "translucency": {
+        "enabled": true,
+        "value": 0.3
       }
     }
   ],
-  "supported-platforms" : {
-    "squares" : "shared"
+  "supported-platforms": {
+    "squares": "shared"
   }
 }

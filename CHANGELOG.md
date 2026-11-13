@@ -14,6 +14,10 @@ through API v1 (`/api/v1`).
 
 ## [2026.11.0] - Unreleased
 
+- The logic with no screens is in `Core/`, which also builds as a Swift
+  package: `just test` runs its unit tests with `swift test` on Linux or a Mac,
+  and CI runs them on Linux too. `just test-app` runs all the tests in the iOS
+  simulator, as `just test` did before.
 - A Mac app (macOS 15 or later) from the same target and sources as the iPhone
   and iPad app, and the repository is renamed pressbox-darwin. On Mac the
   controls are in the window toolbar, search is in the title bar, Settings is

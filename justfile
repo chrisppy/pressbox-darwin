@@ -26,8 +26,17 @@ build-ios: project
 build-mac: project
     xcodebuild build -project Pressbox.xcodeproj -scheme Pressbox -destination 'generic/platform=macOS' -configuration Debug CODE_SIGNING_ALLOWED=NO
 
-# Run the unit tests in an iPhone simulator (macOS)
-test: project
+# Run the unit tests of Core/ with SwiftPM: no Xcode or simulator (Linux or macOS)
+test:
+    swift test
+
+# The same, then a line-coverage report of Core/ (Linux; on macOS use `xcrun llvm-cov`)
+coverage:
+    swift test --enable-code-coverage
+    llvm-cov report "$(swift build --show-bin-path)/PressboxPackageTests.xctest" -instr-profile="$(swift build --show-bin-path)/codecov/default.profdata" -ignore-filename-regex='PressboxTests|\.build'
+
+# Run all the unit tests in an iPhone simulator, widgets' included (macOS)
+test-app: project
     xcodebuild test -project Pressbox.xcodeproj -scheme Pressbox -destination "id=$(xcrun simctl list devices available --json | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')" -configuration Debug CODE_SIGNING_ALLOWED=NO
 
 # Check formatting and licensing

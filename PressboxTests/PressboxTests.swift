@@ -9,6 +9,9 @@ import Testing
 // The app's logic that can be tested without its screens or a server: the
 // offline outbox, downloads' bookkeeping, what makes the widgets redraw, the
 // API's JSON, and time formatting.
+//
+// Two ways to run them: `just test` builds Core/ as a Swift package (Linux or
+// Mac, no Xcode), and `just test-app` runs them in the iOS simulator.
 
 /// An item decoded the way the API client decodes one.
 private func item(
@@ -76,7 +79,6 @@ struct OutboxTests {
   }
 }
 
-@MainActor
 struct DownloadTests {
   @Test func taskInfoSurvivesItsDescription() {
     let info = TaskInfo(id: 42, kind: .video, automatic: true, ext: "mp4")
@@ -93,15 +95,15 @@ struct DownloadTests {
          {"url":"https://x/ep.mp4","mime":"video/mp4"},
          {"url":"https://x/ep.mp3","mime":"audio/mpeg"}]
         """#)
-    #expect(Downloads.enclosure(of: episode, video: false)?.url == "https://x/ep.mp3")
-    #expect(Downloads.enclosure(of: episode, video: true)?.url == "https://x/ep.mp4")
+    #expect(DownloadFiles.enclosure(of: episode, video: false)?.url == "https://x/ep.mp3")
+    #expect(DownloadFiles.enclosure(of: episode, video: true)?.url == "https://x/ep.mp4")
   }
 
   @Test func aStreamOnlyEpisodeCantBeDownloaded() throws {
     let stream = try item(
       enclosures: #"[{"url":"https://x/live.m3u8","mime":"application/vnd.apple.mpegurl"}]"#)
-    #expect(Downloads.enclosure(of: stream, video: false) == nil)
-    #expect(Downloads.enclosure(of: try item(media: false), video: false) == nil)
+    #expect(DownloadFiles.enclosure(of: stream, video: false) == nil)
+    #expect(DownloadFiles.enclosure(of: try item(media: false), video: false) == nil)
   }
 
   @Test(arguments: [
@@ -116,40 +118,43 @@ struct DownloadTests {
     let mimeJSON = mime.map { #""\#($0)""# } ?? "null"
     let enclosure = try APIClient.decoder.decode(
       Enclosure.self, from: Data(#"{"url":"\#(url)","mime":\#(mimeJSON)}"#.utf8))
-    #expect(Downloads.fileExtension(of: enclosure) == expected)
+    #expect(DownloadFiles.fileExtension(of: enclosure) == expected)
   }
 }
 
-struct WidgetTests {
-  private let entry = WidgetSnapshot.Entry(id: 1, title: "One", feed: "News", published: 0)
+// The widgets' code is in the app, not in Core, so these run only in Xcode.
+#if !SWIFT_PACKAGE
+  struct WidgetTests {
+    private let entry = WidgetSnapshot.Entry(id: 1, title: "One", feed: "News", published: 0)
 
-  @Test func unreadChangesRedrawTheUnreadWidget() {
-    let old = WidgetSnapshot()
-    var new = old
-    #expect(!WidgetStore.unreadChanged(old, new))
-    new.unread = 3
-    #expect(WidgetStore.unreadChanged(old, new))
-    #expect(!WidgetStore.playingChanged(old, new), "the Up Next widget needn't redraw")
-  }
+    @Test func unreadChangesRedrawTheUnreadWidget() {
+      let old = WidgetSnapshot()
+      var new = old
+      #expect(!WidgetStore.unreadChanged(old, new))
+      new.unread = 3
+      #expect(WidgetStore.unreadChanged(old, new))
+      #expect(!WidgetStore.playingChanged(old, new), "the Up Next widget needn't redraw")
+    }
 
-  @Test func positionOnlyMattersWhilePaused() {
-    var playing = WidgetSnapshot()
-    playing.nowPlaying = entry
-    playing.isPlaying = true
-    var later = playing
-    later.position = 120
-    // Playing, the widget's bar moves by itself.
-    #expect(!WidgetStore.playingChanged(playing, later))
-    later.isPlaying = false
-    #expect(WidgetStore.playingChanged(playing, later))
-  }
+    @Test func positionOnlyMattersWhilePaused() {
+      var playing = WidgetSnapshot()
+      playing.nowPlaying = entry
+      playing.isPlaying = true
+      var later = playing
+      later.position = 120
+      // Playing, the widget's bar moves by itself.
+      #expect(!WidgetStore.playingChanged(playing, later))
+      later.isPlaying = false
+      #expect(WidgetStore.playingChanged(playing, later))
+    }
 
-  @Test func linksOpenItems() {
-    #expect(WidgetStore.itemID(in: WidgetStore.link(1234)) == 1234)
-    #expect(WidgetStore.itemID(in: URL(string: "https://example.com/item/1")!) == nil)
-    #expect(WidgetStore.itemID(in: URL(string: "pressbox://feed/1")!) == nil)
+    @Test func linksOpenItems() {
+      #expect(WidgetStore.itemID(in: WidgetStore.link(1234)) == 1234)
+      #expect(WidgetStore.itemID(in: URL(string: "https://example.com/item/1")!) == nil)
+      #expect(WidgetStore.itemID(in: URL(string: "pressbox://feed/1")!) == nil)
+    }
   }
-}
+#endif
 
 struct ModelTests {
   @Test func decodesAnEpisode() throws {

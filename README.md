@@ -39,8 +39,16 @@ Set your team under Signing & Capabilities (or `DEVELOPMENT_TEAM` in
 `project.yml`), pick an iOS device, a simulator or My Mac, and run it. CI builds
 the app for the iOS simulator and for macOS on every change, and runs the unit
 tests (`PressboxTests/`, with Swift Testing) in an iPhone simulator
-(`.github/workflows/apple.yml`); `just build` and `just test` do the same
+(`.github/workflows/apple.yml`); `just build` and `just test-app` do the same
 locally (`just build-ios` or `just build-mac` for one platform).
+
+The logic with no screens (the API client and its JSON, the offline outbox,
+which file a download saves, time formatting) is in `Core/`, which the app
+compiles and `Package.swift` also builds as a Swift package. `just test` runs
+its tests with `swift test`, on Linux too, in seconds and without Xcode
+(`just coverage` adds a coverage report); CI runs them on Linux as well. Keep
+`Core/` to Foundation, so it still builds there: anything that needs UIKit,
+AVFoundation, WidgetKit and the like stays in `Pressbox/`.
 
 ## Using it
 

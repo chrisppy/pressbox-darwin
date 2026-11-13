@@ -3,6 +3,11 @@
 
 import Foundation
 
+#if canImport(FoundationNetworking)
+  // URLSession and URLRequest, on Linux.
+  import FoundationNetworking
+#endif
+
 enum APIError: LocalizedError {
   case notConfigured
   case invalidServer

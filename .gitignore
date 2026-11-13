@@ -6,6 +6,9 @@
 Pressbox/Info.plist
 Widgets/Info.plist
 build/
+# `swift test` (Package.swift).
+.build/
+.swiftpm/
 result
 result-*
 .direnv

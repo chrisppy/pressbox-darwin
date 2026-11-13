@@ -31,6 +31,9 @@ targets:
     supportedDestinations: [iOS, macOS]
     sources:
       - Pressbox
+      # The logic that also builds as a Swift package (Package.swift), so
+      # its tests run on Linux.
+      - Core
       # Also in the widget extension: what the widgets show, and their
       # play/pause intent.
       - Shared

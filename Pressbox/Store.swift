@@ -75,6 +75,17 @@ final class Store {
   var badgeAllowed = true
   /// The last action to confirm with a haptic (see `haptic(_:)`).
   var feedback: Feedback?
+
+  /// What the Undo toast offers, while it shows (see Store+Undo).
+  var undoable: Undoable?
+  @ObservationIgnored var undoTimer: Task<Void, Never>?
+  /// Items marked read by scrolling since the toast last went: Undo marks
+  /// them all unread again.
+  @ObservationIgnored var scrolledRead: [Int64] = []
+  /// Mark all as read, done here and waiting for the toast to go before it
+  /// is sent.
+  @ObservationIgnored var pendingMarkAll: PendingMarkAll?
+
   /// Mark items read as they scroll off the top of the list.
   var markReadOnScroll: Bool {
     didSet { UserDefaults.standard.set(markReadOnScroll, forKey: "markReadOnScroll") }
@@ -272,6 +283,9 @@ final class Store {
 
   func loadItems() async throws {
     guard let source else { return }
+    // A Mark all as read still waiting out its toast goes to the server
+    // first, so the items come back read.
+    await commitMarkAll(thenReload: false)
     let page = try await api.items(source: source, unreadOnly: unreadOnly, search: search)
     items = page.items
     nextPage = page.next
@@ -400,7 +414,13 @@ final class Store {
     }
   }
 
+  // MARK: Mark all as read
+
+  /// Marks every item in the list read: here at once, with Undo, and on the
+  /// server once the toast goes (`commitMarkAll`), or before anything else
+  /// is loaded.
   func markAllRead() async {
+    guard let source else { return }
     let targets: [String]
     switch source {
     case .feed(let id): targets = [id]
@@ -408,10 +428,52 @@ final class Store {
     case .all: targets = feeds.filter { $0.unread > 0 }.map(\.id)
     default: return
     }
+    guard !targets.isEmpty else { return }
+    // An earlier one, still waiting, goes first.
+    await commitMarkAll(thenReload: false)
+    let count = unread(in: source)
+    let marked = Set(targets)
+    let unreadItems = Set(items.filter { !$0.read && marked.contains($0.feedId) }.map(\.id))
+    pendingMarkAll = PendingMarkAll(
+      feeds: targets,
+      unread: Dictionary(
+        feeds.filter { marked.contains($0.id) }.map { ($0.id, $0.unread) },
+        uniquingKeysWith: { a, _ in a }),
+      items: unreadItems, queue: queue, latestUnread: latestUnread)
+    for i in feeds.indices where marked.contains(feeds[i].id) { feeds[i].unread = 0 }
+    for id in unreadItems { update(id) { $0.read = true } }
+    // As on the server: read items leave Up Next.
+    queue.removeAll { marked.contains($0.feedId) }
+    latestUnread.removeAll { marked.contains($0.feedId) }
+    updateBadge()
+    saveCache()
+    offerUndo(.markAll, count == 1 ? "Marked 1 item as read" : "Marked \(count) items as read")
+  }
+
+  /// Sends a Mark all as read that was waiting for its toast to go, then
+  /// (with `thenReload`) reloads, for the server's counts.
+  func commitMarkAll(thenReload: Bool = true) async {
+    guard let pending = pendingMarkAll else { return }
+    pendingMarkAll = nil
+    if undoable?.kind == .markAll { hideUndo() }
     await run {
-      for id in targets { _ = try await api.markFeedRead(id) }
+      for id in pending.feeds { _ = try await api.markFeedRead(id) }
     }
-    await reload()
+    if thenReload { await reload() }
+  }
+
+  /// Undo for Mark all as read, before it was sent: the lists as they were.
+  func cancelMarkAll() {
+    guard let pending = pendingMarkAll else { return }
+    pendingMarkAll = nil
+    for i in feeds.indices {
+      if let unread = pending.unread[feeds[i].id] { feeds[i].unread = unread }
+    }
+    for id in pending.items { update(id) { $0.read = false } }
+    queue = pending.queue
+    latestUnread = pending.latestUnread
+    updateBadge()
+    saveCache()
   }
 
   func refreshServer() async {

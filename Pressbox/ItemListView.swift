@@ -108,20 +108,26 @@ struct ItemListView: View {
       }
     }
     .safeAreaInset(edge: .bottom) {
-      if store.isOffline {
-        Label(
-          store.outbox.isEmpty
-            ? "Offline: showing saved items" : "Offline: changes will sync when you're back",
-          systemImage: "wifi.slash"
-        )
-        .font(.footnote)
-        .statusBanner()
-      } else if let message = store.errorMessage {
-        Text(message)
+      VStack(spacing: 0) {
+        if let undoable = store.undoable {
+          UndoToast(undoable: undoable)
+        }
+        if store.isOffline {
+          Label(
+            store.outbox.isEmpty
+              ? "Offline: showing saved items" : "Offline: changes will sync when you're back",
+            systemImage: "wifi.slash"
+          )
           .font(.footnote)
-          .foregroundStyle(.white)
-          .statusBanner(tint: Theme.error)
+          .statusBanner()
+        } else if let message = store.errorMessage {
+          Text(message)
+            .font(.footnote)
+            .foregroundStyle(.white)
+            .statusBanner(tint: Theme.error)
+        }
       }
+      .animation(.default, value: store.undoable?.id)
     }
     .bottomControls(search: true) {
       // On: unread items only; off: all of them. Starred shows every starred
@@ -141,7 +147,8 @@ struct ItemListView: View {
         .toggleStyle(.button)
       }
     }
-    // Up top, away from the thumb, and asking first: it can't be undone.
+    // Up top, away from the thumb, and asking first. Undo is only there for
+    // a few seconds after.
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Button("Mark all as read", systemImage: "checkmark.circle") { confirmMarkAll = true }
@@ -156,7 +163,7 @@ struct ItemListView: View {
         Task { await store.markAllRead() }
       }
     } message: {
-      Text("This can't be undone.")
+      Text("You can undo it for a few seconds after.")
     }
   }
 }
@@ -181,8 +188,28 @@ extension ItemListView {
     else { return }
     let below = store.items[(index + 1)...].contains { visible.contains($0.id) }
     if below {
-      Task { await store.setRead(item, true) }
+      Task { await store.markReadScrolledPast(item) }
     }
+  }
+}
+
+/// Undo for marking items read in bulk: Mark all as read, or scrolling.
+/// It goes by itself after a few seconds (`Store.undoSeconds`).
+private struct UndoToast: View {
+  @Environment(Store.self) private var store
+  let undoable: Undoable
+
+  var body: some View {
+    HStack(spacing: 16) {
+      Text(undoable.message)
+      Button("Undo") { Task { await store.undo() } }
+        .bold()
+        // ⌘Z on Mac, and on iPad with a keyboard.
+        .keyboardShortcut("z")
+    }
+    .font(.footnote)
+    .statusBanner()
+    .transition(.move(edge: .bottom).combined(with: .opacity))
   }
 }
 

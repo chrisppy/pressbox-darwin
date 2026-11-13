@@ -106,6 +106,13 @@ through API v1 (`/api/v1`).
   or unstar (swipes and the article's buttons), a light tap for adding to Up
   Next, and a success buzz for Mark all as read. Items marked read by scrolling
   stay quiet.
+- Undo after marking items read in bulk: a toast at the bottom of the list says
+  how many were marked, with Undo (⌘Z on Mac and on an iPad keyboard) for 6
+  seconds. Mark all as read is done in the app at once and sent to the server
+  when the toast goes (or before anything else loads, or when the app goes to
+  the background), so Undo doesn't need the server. Items marked read by
+  scrolling add up in one toast while you keep scrolling. Mark all as read still
+  asks first.
 
 ## [0.1.0] - 2026-11-07
 

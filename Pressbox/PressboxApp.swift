@@ -153,6 +153,7 @@ struct ContentView: View {
           if store.isConfigured { await store.reload() }
         }
       case .background:
+        store.dismissUndoForBackground()
         store.lockIfEnabled()
         Store.scheduleBackgroundRefresh()
       default:

@@ -24,7 +24,7 @@ enum APIError: LocalizedError {
 }
 
 /// Talks to pressboxd's HTTP API.
-struct APIClient {
+struct APIClient: Sendable {
   let server: String
   let token: String?
 

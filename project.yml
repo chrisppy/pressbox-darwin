@@ -12,6 +12,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
+    # Swift 6's data-race checks, as warnings while the language mode is
+    # still 5: once a build has none, SWIFT_VERSION can go to 6 and they
+    # become errors.
+    SWIFT_STRICT_CONCURRENCY: complete
     # Calendar versions, YYYY.M.PATCH (see CHANGELOG.md). The build number is
     # the same as digits, YYYYMMPP, so it always increases.
     MARKETING_VERSION: "2026.11.0"

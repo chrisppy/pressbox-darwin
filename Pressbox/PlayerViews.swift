@@ -13,7 +13,15 @@ struct MiniPlayer: View {
   var body: some View {
     let playback = store.playback
     if let item = playback.item {
+      // Back 10 seconds on the left and Play/Pause on the right, the title
+      // between them: far apart, each with a full-size target, so a tap
+      // meant for one doesn't land on the other.
       HStack(spacing: 12) {
+        Button("Back \(Int(Playback.skipBack)) seconds", systemImage: "gobackward.10") {
+          playback.skip(-Playback.skipBack)
+        }
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
         VStack(alignment: .leading, spacing: 2) {
           Text(item.title).font(.subheadline.weight(.semibold)).lineLimit(1)
           Text(playback.chapter?.title ?? store.feedTitle(item.feedId))
@@ -24,26 +32,17 @@ struct MiniPlayer: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .onTapGesture { showPlayer = true }
-        // Apart, each with a full-size target, so a tap meant for one
-        // doesn't land on the other.
-        HStack(spacing: 20) {
-          Button("Back \(Int(Playback.skipBack)) seconds", systemImage: "gobackward.10") {
-            playback.skip(-Playback.skipBack)
-          }
-          .frame(width: 44, height: 44)
-          .contentShape(Rectangle())
-          Button(
-            playback.isPlaying ? "Pause" : "Play",
-            systemImage: playback.isPlaying ? "pause.fill" : "play.fill"
-          ) {
-            playback.togglePause()
-          }
-          .font(.title3)
-          .frame(width: 44, height: 44)
-          .contentShape(Rectangle())
+        Button(
+          playback.isPlaying ? "Pause" : "Play",
+          systemImage: playback.isPlaying ? "pause.fill" : "play.fill"
+        ) {
+          playback.togglePause()
         }
-        .labelStyle(.iconOnly)
+        .font(.title3)
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
       }
+      .labelStyle(.iconOnly)
       .padding(.horizontal, 16)
       .padding(.vertical, 10)
       .overlay(alignment: .bottom) {

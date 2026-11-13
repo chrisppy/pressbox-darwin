@@ -70,6 +70,9 @@ final class Store {
   var badgeEnabled: Bool {
     didSet { UserDefaults.standard.set(badgeEnabled, forKey: "badgeEnabled") }
   }
+  /// The system shows the badge: notifications are allowed for pressbox and
+  /// their Badges switch is on. If not, setting the count does nothing.
+  var badgeAllowed = true
   /// Mark items read as they scroll off the top of the list.
   var markReadOnScroll: Bool {
     didSet { UserDefaults.standard.set(markReadOnScroll, forKey: "markReadOnScroll") }
@@ -245,6 +248,7 @@ final class Store {
       // Older servers don't have the endpoint; that's not an error.
       if serverVersion == nil { serverVersion = try? await api.version() }
     }
+    await checkBadgeAllowed()
     updateBadge()
     saveCache()
     updateWidgets()

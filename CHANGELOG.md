@@ -97,6 +97,11 @@ through API v1 (`/api/v1`).
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.
+- The unread badge says when the system is hiding it: with Badges (or all
+  notifications) turned off for pressbox in the Settings app, setting the count
+  silently did nothing. Settings now shows a warning under the badge switch,
+  with a button to the right page in the Settings app (on Mac, where to find it
+  in System Settings). The check runs on every reload and when Settings opens.
 
 ## [0.1.0] - 2026-11-07
 

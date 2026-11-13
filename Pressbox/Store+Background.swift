@@ -17,11 +17,22 @@ extension Store {
         ?? false
       badgeEnabled = granted
       if !granted { errorMessage = Self.allowBadgesMessage }
+      await checkBadgeAllowed()
     } else {
       badgeEnabled = false
     }
     updateBadge()
     Self.scheduleBackgroundRefresh()
+  }
+
+  /// Checks that the system will show the badge. Turning off Badges (or all
+  /// notifications) for pressbox in Settings doesn't tell the app, and the
+  /// count it sets then silently doesn't show.
+  func checkBadgeAllowed() async {
+    let settings = await UNUserNotificationCenter.current().notificationSettings()
+    let authorized = [UNAuthorizationStatus.authorized, .provisional]
+      .contains(settings.authorizationStatus)
+    badgeAllowed = authorized && settings.badgeSetting == .enabled
   }
 
   func updateBadge() {

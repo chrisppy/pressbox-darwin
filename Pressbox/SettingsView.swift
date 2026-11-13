@@ -6,6 +6,7 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(Store.self) private var store
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.openURL) private var openURL
   @State private var server = ""
   @State private var deviceName = Self.defaultDeviceName
   @State private var manualToken = ""
@@ -40,6 +41,9 @@ struct SettingsView: View {
               isOn: Binding(
                 get: { store.badgeEnabled },
                 set: { value in Task { await store.setBadgeEnabled(value) } }))
+            if store.badgeEnabled && !store.badgeAllowed {
+              badgeBlocked
+            }
           } footer: {
             Text(Self.optionsFooter)
           }
@@ -80,6 +84,7 @@ struct SettingsView: View {
         Button("Forget", role: .destructive) { store.forget() }
       }
       .onAppear { server = store.server }
+      .task { await store.checkBadgeAllowed() }
       .onDisappear { store.cancelPairing() }
     }
     .interactiveDismissDisabled(!store.isConfigured)
@@ -172,6 +177,31 @@ struct SettingsView: View {
 }
 
 extension SettingsView {
+  /// The badge is on here but off in the system's settings, so it doesn't
+  /// show: say so, with the way there.
+  @ViewBuilder fileprivate var badgeBlocked: some View {
+    #if os(iOS)
+      VStack(alignment: .leading, spacing: 8) {
+        Label(
+          "Badges are off for pressbox in the Settings app, so the count doesn't show.",
+          systemImage: "exclamationmark.triangle.fill"
+        )
+        .foregroundStyle(Theme.error)
+        Button("Turn On Badges in Settings") {
+          if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+            openURL(url)
+          }
+        }
+      }
+    #else
+      Label(
+        "Badges are off for pressbox in System Settings › Notifications, so the count doesn't show.",
+        systemImage: "exclamationmark.triangle.fill"
+      )
+      .foregroundStyle(Theme.error)
+    #endif
+  }
+
   /// Episodes saved to play offline: automatic downloads, the network they
   /// use, and the space they take.
   @ViewBuilder fileprivate var downloadsSection: some View {

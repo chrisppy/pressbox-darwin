@@ -145,6 +145,11 @@ struct ItemListView: View {
         }
         .toggleStyle(.button)
       }
+      // News and Podcasts where a list spans every feed. A feed or tag's
+      // list follows the choice made on the feed list.
+      if store.canFilterKinds && (store.source == .all || store.source == .starred) {
+        kindToggles(store)
+      }
     }
     // Up top, away from the thumb, and asking first. Undo is only there for
     // a few seconds after.

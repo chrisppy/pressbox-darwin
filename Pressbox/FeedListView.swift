@@ -97,38 +97,12 @@ struct FeedListView: View {
       Button("Settings", systemImage: "gear") { showSettings = true }
       // Servers before 2026.11 don't say which feeds are podcasts.
       if store.canFilterKinds {
-        kindToggles
+        kindToggles(store)
       }
       Button("Refresh feeds", systemImage: "arrow.clockwise") {
         Task { await store.refreshServer() }
       }
       .disabled(store.isLoading)
     }
-  }
-
-  /// News and Podcasts: both on shows everything. Turning off the only one
-  /// on switches to the other, so the lists are never empty by choice.
-  @ViewBuilder private var kindToggles: some View {
-    Toggle(isOn: kindBinding(\.news, update: { $0.set(news: $1) })) {
-      Label("News", systemImage: "newspaper")
-    }
-    .toggleStyle(.button)
-    Toggle(isOn: kindBinding(\.podcasts, update: { $0.set(podcasts: $1) })) {
-      Label("Podcasts", systemImage: "headphones")
-    }
-    .toggleStyle(.button)
-  }
-
-  private func kindBinding(
-    _ kind: KeyPath<Shows, Bool>, update: @escaping (inout Shows, Bool) -> Void
-  ) -> Binding<Bool> {
-    Binding(
-      get: { store.shows[keyPath: kind] },
-      set: { value in
-        var shows = store.shows
-        update(&shows, value)
-        store.haptic(.toggle)
-        Task { await store.setShows(shows) }
-      })
   }
 }

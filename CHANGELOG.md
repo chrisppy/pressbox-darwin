@@ -14,6 +14,11 @@ through API v1 (`/api/v1`).
 
 ## [2026.11.0] - Unreleased
 
+- A long press on an item offers Mark as Read or Unread and Star first, the
+  same actions as its swipes. Mark all as read and Forget this device ask from
+  their own buttons, the undo and status banners and the mini player get the
+  scroll edge effect, and Reload and Refresh Feeds on Server are in the iPad's
+  menu bar.
 - The logic with no screens is in `Core/`, which also builds as a Swift package:
   `just test` runs its unit tests with `swift test` on Linux or a Mac, and CI
   runs them on Linux too. `just test-app` runs all the tests in the iOS

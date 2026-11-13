@@ -55,8 +55,22 @@ struct ItemListView: View {
                 .tint(Theme.upNext)
               }
             }
+            // The swipe actions first, as the HIG asks, then Up Next.
             .contextMenu {
+              Button(
+                item.read ? "Mark as Unread" : "Mark as Read",
+                systemImage: item.read ? "circle.fill" : "circle"
+              ) {
+                Task { await store.setRead(item, !item.read) }
+              }
+              Button(
+                item.starred ? "Unstar" : "Star",
+                systemImage: item.starred ? "star.slash" : "star"
+              ) {
+                Task { await store.setStarred(item, !item.starred) }
+              }
               if item.isEpisode && store.hasQueue {
+                Divider()
                 Button("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward") {
                   Task { await store.enqueue(item, next: true) }
                 }
@@ -106,7 +120,7 @@ struct ItemListView: View {
         emptyState
       }
     }
-    .safeAreaInset(edge: .bottom) {
+    .safeAreaBar(edge: .bottom) {
       VStack(spacing: 0) {
         if let undoable = store.undoable {
           UndoToast(undoable: undoable)
@@ -159,17 +173,18 @@ struct ItemListView: View {
       ToolbarItem(placement: .primaryAction) {
         Button("Mark all as read", systemImage: "checkmark.circle") { confirmMarkAll = true }
           .disabled(markAllCount == 0)
+          // On the button, so the action sheet comes from it.
+          .confirmationDialog(
+            markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
+          ) {
+            Button("Mark \(markAllCount) as Read", role: .destructive) {
+              store.haptic(.done)
+              Task { await store.markAllRead() }
+            }
+          } message: {
+            Text("You can undo it for a few seconds after.")
+          }
       }
-    }
-    .confirmationDialog(
-      markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
-    ) {
-      Button("Mark \(markAllCount) as Read", role: .destructive) {
-        store.haptic(.done)
-        Task { await store.markAllRead() }
-      }
-    } message: {
-      Text("You can undo it for a few seconds after.")
     }
   }
 }

@@ -100,7 +100,7 @@ private struct BottomControls<Buttons: View>: ViewModifier {
     /// toolbar.
     @ViewBuilder func miniPlayerAbove(_ shown: Bool = true) -> some View {
       if shown {
-        safeAreaInset(edge: .bottom, spacing: 0) { MiniPlayer() }
+        safeAreaBar(edge: .bottom, spacing: 0) { MiniPlayer() }
       } else {
         self
       }

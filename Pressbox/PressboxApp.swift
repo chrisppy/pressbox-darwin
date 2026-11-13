@@ -23,6 +23,8 @@ struct PressboxApp: App {
         ContentView()
           .environment(store)
       }
+      // The menu bar on iPad.
+      .commands { FeedCommands(store: store) }
       .backgroundTask(.appRefresh(Store.refreshTaskID)) {
         await Store.backgroundRefresh()
       }
@@ -34,27 +36,26 @@ struct PressboxApp: App {
   }
 }
 
-#if os(macOS)
-  /// Menu commands for what pull-to-refresh and the toolbars do on iPhone.
-  struct FeedCommands: Commands {
-    let store: Store
+/// Menu commands, in the Mac's and the iPad's menu bar, for what
+/// pull-to-refresh and the toolbars do on iPhone.
+struct FeedCommands: Commands {
+  let store: Store
 
-    var body: some Commands {
-      CommandGroup(after: .toolbar) {
-        Button("Reload") {
-          Task { await store.reload() }
-        }
-        .keyboardShortcut("r")
-        .disabled(!store.isConfigured)
-        Button("Refresh Feeds on Server") {
-          Task { await store.refreshServer() }
-        }
-        .keyboardShortcut("r", modifiers: [.command, .shift])
-        .disabled(!store.isConfigured || store.isLoading)
+  var body: some Commands {
+    CommandGroup(after: .toolbar) {
+      Button("Reload") {
+        Task { await store.reload() }
       }
+      .keyboardShortcut("r")
+      .disabled(!store.isConfigured)
+      Button("Refresh Feeds on Server") {
+        Task { await store.refreshServer() }
+      }
+      .keyboardShortcut("r", modifiers: [.command, .shift])
+      .disabled(!store.isConfigured || store.isLoading)
     }
   }
-#endif
+}
 
 struct ContentView: View {
   @Environment(Store.self) private var store
@@ -123,7 +124,7 @@ struct ContentView: View {
       // The episode playing, along the bottom of the window. On iPhone and
       // iPad each screen has it above its bottom toolbar instead (see
       // `bottomControls`).
-      .safeAreaInset(edge: .bottom, spacing: 0) {
+      .safeAreaBar(edge: .bottom, spacing: 0) {
         MiniPlayer()
       }
     #endif

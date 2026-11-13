@@ -52,6 +52,9 @@ struct SettingsView: View {
           downloadsSection
           Section {
             Button("Forget this device", role: .destructive) { confirmForget = true }
+              .confirmationDialog("Forget this device?", isPresented: $confirmForget) {
+                Button("Forget", role: .destructive) { store.forget() }
+              }
           } footer: {
             Text(
               "Removes the token and saved items. Revoke it on the server with `pressboxctl revoke`."
@@ -82,9 +85,6 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(minWidth: 460, idealWidth: 520, minHeight: 480)
       #endif
-      .confirmationDialog("Forget this device?", isPresented: $confirmForget) {
-        Button("Forget", role: .destructive) { store.forget() }
-      }
       .onAppear { server = store.server }
       .task {
         await store.checkBadgeAllowed()

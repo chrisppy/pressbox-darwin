@@ -113,6 +113,11 @@ through API v1 (`/api/v1`).
   the background), so Undo doesn't need the server. Items marked read by
   scrolling add up in one toast while you keep scrolling. Mark all as read still
   asks first.
+- Podcast settings: how far the skip buttons jump, back and forward (5 to 60
+  seconds; also on the Lock Screen, in Control Center and for Siri and
+  Shortcuts), and a default speed. Each podcast keeps its own speed: change it
+  in the player and that podcast's episodes play at it from then on; set it back
+  to the default to forget it. Speeds are kept on this device.
 
 ## [0.1.0] - 2026-11-07
 

@@ -109,7 +109,10 @@ final class Store {
     playback.store = self
     // Playback from the widget, Control Center, Siri and Shortcuts.
     PlaybackBridge.toggle = { [weak self] in await self?.togglePlayback() }
-    PlaybackBridge.skip = { [weak self] by in self?.playback.skip(by) }
+    PlaybackBridge.skip = { [weak self] forward in
+      guard let playback = self?.playback else { return }
+      playback.skip(forward ? playback.skipForward : -playback.skipBack)
+    }
   }
 
   var isConfigured: Bool {

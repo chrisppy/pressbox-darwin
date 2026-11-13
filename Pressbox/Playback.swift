@@ -59,8 +59,42 @@ final class Playback {
   static let saveEvery = 15
   /// Stopping this close to the end (seconds) counts as finishing.
   static let nearEnd: Double = 30
-  static let skipForward: Double = 30
-  static let skipBack: Double = 10
+  /// The skip lengths Settings offers, in seconds: each has SF Symbols,
+  /// `gobackward.N` and `goforward.N`.
+  static let skipChoices = [5, 10, 15, 30, 45, 60]
+
+  /// Seconds the skip buttons jump, here and on the Lock Screen: set in
+  /// Settings.
+  var skipForward: Double = 30 {
+    didSet {
+      UserDefaults.standard.set(Int(skipForward), forKey: "skipForward")
+      updateSkipCommands()
+    }
+  }
+  var skipBack: Double = 10 {
+    didSet {
+      UserDefaults.standard.set(Int(skipBack), forKey: "skipBack")
+      updateSkipCommands()
+    }
+  }
+  var skipForwardSymbol: String { "goforward.\(Int(skipForward))" }
+  var skipBackSymbol: String { "gobackward.\(Int(skipBack))" }
+
+  /// The speed for podcasts without one of their own: set in Settings.
+  var defaultRate: Float = 1 {
+    didSet {
+      UserDefaults.standard.set(defaultRate, forKey: "defaultRate")
+      if let item, feedRates[item.feedId] == nil { setRate(defaultRate, remember: false) }
+    }
+  }
+  /// Each podcast's own speed, by feed id: the last one set while one of
+  /// its episodes played.
+  @ObservationIgnored private var feedRates: [String: Float] = [:]
+
+  /// "1.5×".
+  static func rateLabel(_ rate: Float) -> String {
+    (rate == rate.rounded() ? String(Int(rate)) : String(format: "%g", rate)) + "×"
+  }
 
   /// For saving positions and marking episodes read.
   @ObservationIgnored weak var store: Store?
@@ -75,6 +109,14 @@ final class Playback {
   @ObservationIgnored private var artwork: MPMediaItemArtwork?
 
   init() {
+    let defaults = UserDefaults.standard
+    skipForward = Self.skipChoice(defaults.integer(forKey: "skipForward"), else: 30)
+    skipBack = Self.skipChoice(defaults.integer(forKey: "skipBack"), else: 10)
+    if let rate = defaults.object(forKey: "defaultRate") as? Float, Self.rates.contains(rate) {
+      defaultRate = rate
+    }
+    feedRates = (defaults.dictionary(forKey: "feedRates") as? [String: Float]) ?? [:]
+    rate = defaultRate
     setUpRemoteCommands()
     #if os(iOS)
       observeInterruptions()
@@ -103,6 +145,10 @@ final class Playback {
       }
     }
   #endif
+
+  private static func skipChoice(_ seconds: Int, else fallback: Double) -> Double {
+    skipChoices.contains(seconds) ? Double(seconds) : fallback
+  }
 
   /// The chapter at the current position.
   var chapter: Chapter? {
@@ -184,6 +230,9 @@ final class Playback {
         await self.finish(advance: true)
       }
     }
+    // The podcast's own speed; switching between audio and video keeps
+    // the one playing.
+    if !switching { rate = feedRates[episode.feedId] ?? defaultRate }
     player.replaceCurrentItem(with: playerItem)
     if start > 0 {
       _ = await player.seek(to: CMTime(seconds: start, preferredTimescale: 1))
@@ -278,11 +327,16 @@ final class Playback {
     setRate(Self.rates[i])
   }
 
-  func setRate(_ value: Float) {
+  /// Sets the speed, and (with `remember`) keeps it for the podcast
+  /// playing: its episodes play at this speed from now on.
+  func setRate(_ value: Float, remember: Bool = true) {
     rate = value
     player.defaultRate = value
     if isPlaying { player.rate = value }
     updateNowPlaying()
+    guard remember, let item else { return }
+    feedRates[item.feedId] = value == defaultRate ? nil : value
+    UserDefaults.standard.set(feedRates, forKey: "feedRates")
   }
 
   /// Stops playing, saving the position (or, near the end, finishing).
@@ -398,6 +452,13 @@ final class Playback {
     }
   }
 
+  /// The Lock Screen's and Control Center's skip buttons, as set.
+  private func updateSkipCommands() {
+    let center = MPRemoteCommandCenter.shared()
+    center.skipForwardCommand.preferredIntervals = [NSNumber(value: skipForward)]
+    center.skipBackwardCommand.preferredIntervals = [NSNumber(value: skipBack)]
+  }
+
   private func setUpRemoteCommands() {
     let center = MPRemoteCommandCenter.shared()
     center.playCommand.addTarget { [weak self] _ in
@@ -412,14 +473,19 @@ final class Playback {
       MainActor.assumeIsolated { self?.togglePause() }
       return .success
     }
-    center.skipForwardCommand.preferredIntervals = [NSNumber(value: Self.skipForward)]
+    updateSkipCommands()
     center.skipForwardCommand.addTarget { [weak self] _ in
-      MainActor.assumeIsolated { self?.skip(Self.skipForward) }
+      MainActor.assumeIsolated {
+        guard let self else { return }
+        self.skip(self.skipForward)
+      }
       return .success
     }
-    center.skipBackwardCommand.preferredIntervals = [NSNumber(value: Self.skipBack)]
     center.skipBackwardCommand.addTarget { [weak self] _ in
-      MainActor.assumeIsolated { self?.skip(-Self.skipBack) }
+      MainActor.assumeIsolated {
+        guard let self else { return }
+        self.skip(-self.skipBack)
+      }
       return .success
     }
     center.changePlaybackPositionCommand.addTarget { [weak self] event in

@@ -17,8 +17,8 @@ struct MiniPlayer: View {
       // between them: far apart, each with a full-size target, so a tap
       // meant for one doesn't land on the other.
       HStack(spacing: 12) {
-        Button("Back \(Int(Playback.skipBack)) seconds", systemImage: "gobackward.10") {
-          playback.skip(-Playback.skipBack)
+        Button("Back \(Int(playback.skipBack)) seconds", systemImage: playback.skipBackSymbol) {
+          playback.skip(-playback.skipBack)
         }
         .frame(width: 44, height: 44)
         .contentShape(Rectangle())
@@ -89,7 +89,7 @@ struct NowPlayingView: View {
           ScrubBar()
           controls
           HStack(spacing: 24) {
-            Button("\(Self.rateLabel(playback.rate))×") { playback.nextRate() }
+            Button(Playback.rateLabel(playback.rate)) { playback.nextRate() }
               .monospacedDigit()
             sleepMenu
             if !playback.chapters.isEmpty {
@@ -196,10 +196,6 @@ struct NowPlayingView: View {
     .labelStyle(.iconOnly)
   }
 
-  private static func rateLabel(_ rate: Float) -> String {
-    rate == rate.rounded() ? String(Int(rate)) : String(format: "%g", rate)
-  }
-
   private var controls: some View {
     let playback = store.playback
     return HStack(spacing: 32) {
@@ -207,8 +203,8 @@ struct NowPlayingView: View {
         playback.jumpChapter(next: false)
       }
       .disabled(playback.chapters.isEmpty)
-      Button("Back \(Int(Playback.skipBack)) seconds", systemImage: "gobackward.10") {
-        playback.skip(-Playback.skipBack)
+      Button("Back \(Int(playback.skipBack)) seconds", systemImage: playback.skipBackSymbol) {
+        playback.skip(-playback.skipBack)
       }
       Button(
         playback.isPlaying ? "Pause" : "Play",
@@ -217,8 +213,10 @@ struct NowPlayingView: View {
         playback.togglePause()
       }
       .font(.system(size: 56))
-      Button("Forward \(Int(Playback.skipForward)) seconds", systemImage: "goforward.30") {
-        playback.skip(Playback.skipForward)
+      Button(
+        "Forward \(Int(playback.skipForward)) seconds", systemImage: playback.skipForwardSymbol
+      ) {
+        playback.skip(playback.skipForward)
       }
       Button("Next chapter", systemImage: "forward.end.fill") {
         playback.jumpChapter(next: true)

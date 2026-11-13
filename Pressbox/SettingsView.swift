@@ -47,6 +47,7 @@ struct SettingsView: View {
           } footer: {
             Text(Self.optionsFooter)
           }
+          playbackSection
           downloadsSection
           Section {
             Button("Forget this device", role: .destructive) { confirmForget = true }
@@ -200,6 +201,29 @@ extension SettingsView {
       )
       .foregroundStyle(Theme.error)
     #endif
+  }
+
+  /// How far the skip buttons jump, and the speed for podcasts without
+  /// their own.
+  @ViewBuilder fileprivate var playbackSection: some View {
+    @Bindable var playback = store.playback
+    Section {
+      Picker("Skip back", selection: $playback.skipBack) {
+        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) seconds").tag(Double($0)) }
+      }
+      Picker("Skip forward", selection: $playback.skipForward) {
+        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) seconds").tag(Double($0)) }
+      }
+      Picker("Speed", selection: $playback.defaultRate) {
+        ForEach(Playback.rates.sorted(), id: \.self) { Text(Playback.rateLabel($0)).tag($0) }
+      }
+    } header: {
+      Text("Podcasts")
+    } footer: {
+      Text(
+        "Speed is for podcasts you haven't given their own: change the speed in the player and that podcast keeps it."
+      )
+    }
   }
 
   /// Episodes saved to play offline: automatic downloads, the network they

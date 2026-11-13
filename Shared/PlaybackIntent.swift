@@ -21,31 +21,33 @@ struct TogglePlaybackIntent: AudioPlaybackIntent {
   }
 }
 
-/// Skips forward 30 seconds in the episode playing: Siri, Shortcuts and the
-/// Action button.
+/// Skips forward in the episode playing, as far as set in Settings: Siri,
+/// Shortcuts and the Action button.
 struct SkipForwardIntent: AudioPlaybackIntent {
   static let title: LocalizedStringResource = "Skip Forward"
-  static let description = IntentDescription("Skips forward 30 seconds in the episode playing.")
+  static let description = IntentDescription(
+    "Skips forward in the episode playing, as far as set in pressbox's Settings.")
 
   init() {}
 
   @MainActor
   func perform() async throws -> some IntentResult {
-    PlaybackBridge.skip?(30)
+    PlaybackBridge.skip?(true)
     return .result()
   }
 }
 
-/// Skips back 10 seconds in the episode playing.
+/// Skips back in the episode playing, as far as set in Settings.
 struct SkipBackIntent: AudioPlaybackIntent {
   static let title: LocalizedStringResource = "Skip Back"
-  static let description = IntentDescription("Skips back 10 seconds in the episode playing.")
+  static let description = IntentDescription(
+    "Skips back in the episode playing, as far as set in pressbox's Settings.")
 
   init() {}
 
   @MainActor
   func perform() async throws -> some IntentResult {
-    PlaybackBridge.skip?(-10)
+    PlaybackBridge.skip?(false)
     return .result()
   }
 }
@@ -56,6 +58,6 @@ struct SkipBackIntent: AudioPlaybackIntent {
 @MainActor
 enum PlaybackBridge {
   static var toggle: (@MainActor () async -> Void)?
-  /// Seconds forward (or, negative, back).
-  static var skip: (@MainActor (Double) -> Void)?
+  /// Forward (`true`) or back, as far as set in Settings.
+  static var skip: (@MainActor (_ forward: Bool) -> Void)?
 }

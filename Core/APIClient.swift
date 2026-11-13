@@ -8,7 +8,7 @@ import Foundation
   import FoundationNetworking
 #endif
 
-enum APIError: LocalizedError {
+enum APIError: LocalizedError, Equatable {
   case notConfigured
   case invalidServer
   case unauthorized
@@ -32,6 +32,8 @@ enum APIError: LocalizedError {
 struct APIClient: Sendable {
   let server: String
   let token: String?
+  /// The tests' fake server replaces it.
+  var session: URLSession = .shared
 
   static let decoder: JSONDecoder = {
     let decoder = JSONDecoder()
@@ -66,7 +68,7 @@ struct APIClient: Sendable {
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.httpBody = try JSONEncoder().encode(body)
     }
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await session.data(for: request)
     return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
   }
 

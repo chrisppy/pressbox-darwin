@@ -172,6 +172,40 @@ struct ModelTests {
   @Test func anArticleIsntAnEpisode() throws {
     #expect(try !item(media: false).isEpisode)
   }
+
+  @Test func datesAndLinks() throws {
+    let json = #"""
+      {"id":1,"feed_id":"news","title":"One","url":"https://x/1","published":86400,
+       "read":false,"starred":false,"position":42}
+      """#
+    let one = try APIClient.decoder.decode(Item.self, from: Data(json.utf8))
+    #expect(one.publishedDate == Date(timeIntervalSince1970: 86400))
+    #expect(one.link == URL(string: "https://x/1"))
+    #expect(one.resumeAt == 42)
+    #expect(try item().link == nil)
+  }
+
+  @Test func videoOnlyEpisodesPlayTheirVideo() throws {
+    let episode = try item(enclosures: #"[{"url":"https://x/e.mp4","mime":"video/mp4"}]"#)
+    #expect(episode.media?.audio?.url == "https://x/e.mp4")
+    #expect(episode.media?.hasTranscript == false)
+  }
+
+  @Test func archivedOnlyWhenTheServerSaysSo() throws {
+    let feed = #"{"id":"a","title":"A","url":"u","tags":[],"unread":0,"total":0"#
+    let decode = { (extra: String) in
+      try APIClient.decoder.decode(Feed.self, from: Data((feed + extra + "}").utf8))
+    }
+    #expect(try !decode("").isArchived)
+    #expect(try decode(#","archived":true"#).isArchived)
+  }
+
+  @Test func pagesPreferCursors() throws {
+    let page = { (json: String) in try APIClient.decoder.decode(ItemPage.self, from: Data(json.utf8)) }
+    #expect(try page(#"{"items":[],"next_cursor":"c","next_offset":5}"#).next == .cursor("c"))
+    #expect(try page(#"{"items":[],"next_offset":5}"#).next == .offset(5))
+    #expect(try page(#"{"items":[]}"#).next == nil)
+  }
 }
 
 struct FormatTimeTests {

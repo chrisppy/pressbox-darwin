@@ -190,7 +190,8 @@ private struct ConnectionStatus: View {
   @State private var checking = false
 
   private enum Status {
-    case checking, connected, offline, problem(String)
+    case checking, connected, offline
+    case problem(String)
   }
 
   private var state: Status {

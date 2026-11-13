@@ -1,7 +1,6 @@
 {
-  "color-space-for-untagged-svg-colors": "srgb",
   "fill": {
-    "solid": "srgb:0.04314,0.04314,0.04314,1.00000"
+    "solid": "extended-srgb:0.04314,0.04314,0.04314,1.00000"
   },
   "groups": [
     {

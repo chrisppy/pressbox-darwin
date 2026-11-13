@@ -11,8 +11,9 @@ SPDX-FileCopyrightText  = "2026 Chris Palmer <chris@red-oxide.org>"
 SPDX-License-Identifier = "MPL-2.0"
 path                    = ["flake.lock", "Pressbox/Assets.xcassets/**/*.json"]
 
-# The layered app icon's manifest (its layers are SVGs with headers).
+# The layered app icon: its manifest and its layers, kept as plain SVG
+# for Icon Composer.
 [[annotations]]
 SPDX-FileCopyrightText  = "2026 Chris Palmer <chris@red-oxide.org>"
 SPDX-License-Identifier = "CC-BY-SA-4.0"
-path                    = "Pressbox/AppIcon.icon/icon.json"
+path                    = "Pressbox/AppIcon.icon/**"

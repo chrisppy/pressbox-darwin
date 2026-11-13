@@ -1,9 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
-SPDX-License-Identifier: CC-BY-SA-4.0
--->
-<!-- Front layer: the day's headlines, tapering with the plate. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <g fill="none" stroke-linecap="round" stroke-width="56">
     <path d="M352 392 H672" stroke="#ff7a1a"/>

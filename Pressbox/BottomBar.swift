@@ -32,9 +32,8 @@ extension EnvironmentValues {
 extension View {
   /// The screen's controls, together in one group centered in the bottom
   /// toolbar: Back (and Home) first when columns are stacked, then
-  /// `buttons`. On iOS 26 the group is one piece of glass, and
-  /// with `search` a search button sits beside it, opening the field in the
-  /// bar; before iOS 26 the field stays at the top.
+  /// `buttons`. The group is one piece of glass, and with `search` a search
+  /// button sits beside it, opening the field in the bar.
   func bottomControls<Buttons: View>(
     search: Bool = false, @ViewBuilder _ buttons: () -> Buttons
   ) -> some View {
@@ -67,27 +66,16 @@ private struct BottomControls<Buttons: View>: ViewModifier {
       // rather than over it.
       let screen = content.navigationBarBackButtonHidden(navigation != nil)
         .miniPlayerAbove(showsMiniPlayer)
-      if #available(iOS 26, *) {
-        screen
-          .toolbar {
-            ToolbarSpacer(.flexible, placement: .bottomBar)
-            ToolbarItemGroup(placement: .bottomBar) { allButtons }
-            if search {
-              DefaultToolbarItem(kind: .search, placement: .bottomBar)
-            }
-            ToolbarSpacer(.flexible, placement: .bottomBar)
+      screen
+        .toolbar {
+          ToolbarSpacer(.flexible, placement: .bottomBar)
+          ToolbarItemGroup(placement: .bottomBar) { allButtons }
+          if search {
+            DefaultToolbarItem(kind: .search, placement: .bottomBar)
           }
-          .searchToolbarBehavior(.minimize)
-      } else {
-        screen
-          .toolbar {
-            ToolbarItemGroup(placement: .bottomBar) {
-              Spacer()
-              allButtons
-              Spacer()
-            }
-          }
-      }
+          ToolbarSpacer(.flexible, placement: .bottomBar)
+        }
+        .searchToolbarBehavior(.minimize)
     }
   #endif
 

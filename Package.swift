@@ -11,7 +11,7 @@ import PackageDescription
 
 let package = Package(
   name: "Pressbox",
-  platforms: [.iOS(.v18), .macOS(.v15)],
+  platforms: [.iOS("27.0"), .macOS("27.0")],
   targets: [
     // Named like the app, so the tests' `@testable import Pressbox` works in
     // both.

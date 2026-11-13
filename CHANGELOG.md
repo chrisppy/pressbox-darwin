@@ -143,6 +143,9 @@ through API v1 (`/api/v1`).
   with unread counts to match, and hides feeds with nothing of that kind.
   Turning off the only one on switches to the other. Mark all as read marks only
   the kind shown. The badge and the widgets still count everything.
+- Needs iOS 27 or macOS 27 (was iOS 18 and macOS 15), and Xcode 27 to build. The
+  fallbacks for systems without Liquid Glass are gone, and CI builds on GitHub's
+  xcode-27 runners.
 
 ## [0.1.0] - 2026-11-07
 

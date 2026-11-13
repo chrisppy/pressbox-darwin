@@ -22,9 +22,9 @@ jobs:
           "generic/platform=macOS",
         ]
     name: build (${{ matrix.destination }})
-    # macOS 26 ships Xcode 26: the iOS and macOS 26 SDKs are needed for
-    # Liquid Glass.
-    runs-on: macos-26
+    # GitHub's macOS images are named for their Xcode: the app needs Xcode 27
+    # and the iOS and macOS 27 SDKs.
+    runs-on: xcode-27
 
     steps:
       - name: Checkout repository
@@ -63,7 +63,7 @@ jobs:
 
   test:
     name: test (iOS Simulator)
-    runs-on: macos-26
+    runs-on: xcode-27
 
     steps:
       - name: Checkout repository

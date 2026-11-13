@@ -17,11 +17,11 @@ clients, such as the `pressbox` terminal reader.
 
 ## Requirements
 
-- iOS 18 or later on iPhone and iPad, or macOS 15 or later on a Mac.
+- iOS 27 or later on iPhone and iPad, or macOS 27 or later on a Mac.
 - A pressbox server reachable over HTTPS. iOS only allows plain HTTP to local
   network addresses (the same goes for macOS); `tailscale serve --bg 8470` on
   the server is the least work, and a reverse proxy with ACME works too.
-- To build: a Mac with Xcode 26 or later and
+- To build: a Mac with Xcode 27 or later and
   [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ## Building

@@ -224,7 +224,7 @@ final class Playback {
     ) { [weak self] _ in
       // As in the status observer: an explicitly main-actor task. A bare
       // `Task { await self?.finish() }` is ambiguous between Task's
-      // initializers with the iOS 26 SDK.
+      // initializers since the iOS 26 SDK.
       Task { @MainActor in
         guard let self else { return }
         await self.finish(advance: true)

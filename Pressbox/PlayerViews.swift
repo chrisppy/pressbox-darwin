@@ -92,6 +92,7 @@ struct NowPlayingView: View {
           HStack(spacing: 24) {
             Button("\(Self.rateLabel(playback.rate))×") { playback.nextRate() }
               .monospacedDigit()
+            sleepMenu
             if !playback.chapters.isEmpty {
               Button("Chapters", systemImage: "list.bullet") { showChapters = true }
                 .labelStyle(.iconOnly)
@@ -114,6 +115,19 @@ struct NowPlayingView: View {
             .labelStyle(.iconOnly)
           }
           .font(.title3)
+          if let sleepAt = playback.sleepAt {
+            HStack(spacing: 4) {
+              Text("Pauses in")
+              Text(timerInterval: Date.now...max(sleepAt, .now), countsDown: true)
+                .monospacedDigit()
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+          } else if playback.sleepTimer == .endOfEpisode {
+            Text("Pauses at the end of this episode")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+          }
         } else {
           ContentUnavailableView("Nothing playing", systemImage: "waveform")
         }
@@ -165,6 +179,23 @@ struct NowPlayingView: View {
   }
 
   static let upNextSymbol = "text.line.first.and.arrowtriangle.forward"
+
+  /// The sleep timer: off, a number of minutes, or the end of the episode.
+  private var sleepMenu: some View {
+    let playback = store.playback
+    return Menu {
+      Button("Off") { playback.setSleepTimer(nil) }
+        .disabled(playback.sleepTimer == nil)
+      ForEach(Playback.sleepMinutes, id: \.self) { minutes in
+        Button("\(minutes) minutes") { playback.setSleepTimer(.minutes(minutes)) }
+      }
+      Button("End of Episode") { playback.setSleepTimer(.endOfEpisode) }
+    } label: {
+      Label(
+        "Sleep Timer", systemImage: playback.sleepTimer == nil ? "moon.zzz" : "moon.zzz.fill")
+    }
+    .labelStyle(.iconOnly)
+  }
 
   private static func rateLabel(_ rate: Float) -> String {
     rate == rate.rounded() ? String(Int(rate)) : String(format: "%g", rate)

@@ -7,14 +7,33 @@ import WidgetKit
 
 /// The widgets: unread items, and the episode playing with Up Next. They
 /// draw what the app last wrote (see `WidgetStore`); the app has them redraw
-/// when that changes.
+/// when that changes. On iPhone and iPad, also a Control Center control.
 @main
 struct PressboxWidgets: WidgetBundle {
   var body: some Widget {
     UnreadWidget()
     UpNextWidget()
+    #if os(iOS)
+      PlaybackControl()
+    #endif
   }
 }
+
+#if os(iOS)
+  /// Play or pause in Control Center (and on the Lock Screen, or the Action
+  /// button): what plays, or the first in Up Next.
+  struct PlaybackControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+      StaticControlConfiguration(kind: "org.red-oxide.pressbox.playback") {
+        ControlWidgetButton(action: TogglePlaybackIntent()) {
+          Label("Play or Pause", systemImage: "playpause.fill")
+        }
+      }
+      .displayName("pressbox")
+      .description("Plays or pauses the episode, or plays the first in Up Next.")
+    }
+  }
+#endif
 
 struct SnapshotEntry: TimelineEntry {
   let date: Date

@@ -91,8 +91,9 @@ final class Store {
     }
     outbox = Cache.loadOutbox()
     playback.store = self
-    // The Up Next widget's play/pause button.
+    // Playback from the widget, Control Center, Siri and Shortcuts.
     PlaybackBridge.toggle = { [weak self] in await self?.togglePlayback() }
+    PlaybackBridge.skip = { [weak self] by in self?.playback.skip(by) }
   }
 
   var isConfigured: Bool {

@@ -85,6 +85,11 @@ through API v1 (`/api/v1`).
 - The mini player stays off an episode's page, whose bottom bar already has
   Play; its More menu opens the full player (Now Playing) instead. On an iPad
   with the columns side by side, the mini player moves under the item list.
+- A sleep timer in the full player: 15, 30, 45 or 60 minutes, or the end of
+  the episode (which also stops it going on into Up Next).
+- Siri and Shortcuts: play or pause (or play Up Next), skip forward and skip
+  back, with phrases that need no setup, and so on the Action button too; and a
+  play/pause control for Control Center on iPhone and iPad.
 - An About section at the bottom of Settings: the app's version and build (to
   tell TestFlight builds apart), and links to the source code, the changelog,
   red-oxide.org and the license.

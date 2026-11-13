@@ -82,6 +82,14 @@ download is removed once its episode is finished or read (here or in any other
 client), and an automatic one once it is no longer among the 10 newest unread.
 Streams (HLS) can't be saved, so an episode that only has one plays online.
 
+### Siri, Shortcuts and Control Center
+
+"Play or pause pressbox", "Pause pressbox", "Play Up Next in pressbox", "Skip
+forward in pressbox" and "Skip back in pressbox" work with Siri, without setup.
+The same actions are in the Shortcuts app, so the Action button can run them,
+and Control Center (iPhone and iPad) has a pressbox play/pause control. All of
+them work with the app closed.
+
 ### Widgets
 
 Two widgets, for the Home Screen and Today view on iPhone and iPad and the
@@ -112,11 +120,12 @@ While an episode plays, a bar sits above the controls of every screen but an
 episode's own (whose bottom bar has Play, and Now Playing in More); tap it for
 the full player: artwork (the chapter's, when it has one), a scrubber, back 10 /
 forward 30 seconds, previous and next chapter, the speed (1× to 2×, and 0.75×,
-keeping the pitch), AirPlay, the chapter list and the transcript, which follows
-along and jumps where you tap. Audio keeps playing in the background and shows
-on the Lock Screen and in Control Center, whose buttons and headphones work too
-(on Mac, in Control Center's Now Playing and on the media keys); video plays in
-the player, full screen or in picture in picture.
+keeping the pitch), a sleep timer (15 to 60 minutes, or the end of the episode,
+which also stops it going on into Up Next), AirPlay, the chapter list and the
+transcript, which follows along and jumps where you tap. Audio keeps playing in
+the background and shows on the Lock Screen and in Control Center, whose buttons
+and headphones work too (on Mac, in Control Center's Now Playing and on the
+media keys); video plays in the player, full screen or in picture in picture.
 
 The position is saved on the server every 15 seconds and when you pause or stop,
 so playback resumes where you left off here or in any other pressbox client.

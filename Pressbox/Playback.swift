@@ -38,6 +38,21 @@ final class Playback {
   }
   var errorMessage: String?
 
+  /// Pauses playback after a while, or at the end of the episode.
+  enum SleepTimer: Equatable {
+    case minutes(Int)
+    case endOfEpisode
+  }
+
+  /// The sleep timer set, if any.
+  private(set) var sleepTimer: SleepTimer?
+  /// When a timed sleep timer pauses.
+  private(set) var sleepAt: Date?
+  @ObservationIgnored private var sleepTask: Task<Void, Never>?
+
+  /// The sleep timer's choices, in minutes.
+  static let sleepMinutes = [15, 30, 45, 60]
+
   /// The speeds the speed button steps through.
   static let rates: [Float] = [1, 1.25, 1.5, 1.75, 2, 0.75]
   /// The position is saved after it moves this many seconds while playing.
@@ -199,6 +214,23 @@ final class Playback {
     Downloads.shared.saved[episode.id]?.kind == .video
   }
 
+  /// Sets the sleep timer, or (`nil`) turns it off. The app plays in the
+  /// background, so the timer runs with it closed.
+  func setSleepTimer(_ timer: SleepTimer?) {
+    sleepTask?.cancel()
+    sleepTask = nil
+    sleepTimer = timer
+    sleepAt = nil
+    guard case .minutes(let minutes) = timer else { return }
+    sleepAt = Date().addingTimeInterval(TimeInterval(minutes * 60))
+    sleepTask = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(minutes * 60))
+      guard !Task.isCancelled, let self else { return }
+      self.pause()
+      self.setSleepTimer(nil)
+    }
+  }
+
   func togglePause() {
     if isPlaying { pause() } else { resume() }
   }
@@ -256,6 +288,7 @@ final class Playback {
   /// Stops playing, saving the position (or, near the end, finishing).
   func stop() async {
     guard item != nil else { return }
+    setSleepTimer(nil)
     if let d = duration, position >= d - Self.nearEnd {
       await finish()
       return
@@ -271,7 +304,11 @@ final class Playback {
   /// With `advance`, carries on with the next episode in Up Next.
   private func finish(advance: Bool = false) async {
     guard let item else { return }
-    let next = advance ? store?.queue.first(where: { $0.id != item.id }) : nil
+    // A sleep timer for the end of the episode: stop here, not on into Up
+    // Next.
+    let sleeping = sleepTimer == .endOfEpisode
+    if sleeping { setSleepTimer(nil) }
+    let next = advance && !sleeping ? store?.queue.first(where: { $0.id != item.id }) : nil
     // Going on to the next episode, keep the audio session: iOS may not let
     // a backgrounded app activate it again.
     teardown(deactivate: next == nil)

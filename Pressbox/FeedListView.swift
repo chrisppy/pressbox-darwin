@@ -13,9 +13,9 @@ struct FeedListView: View {
     List(selection: $store.source) {
       Section {
         NavigationLink(value: Source.all) {
-          Label("All items", systemImage: "tray.full")
+          Label(store.title(for: .all), systemImage: "tray.full")
         }
-        .badge(store.totalUnread)
+        .badge(store.unread(in: .all))
         NavigationLink(value: Source.starred) {
           Label("Starred", systemImage: "star")
         }
@@ -40,7 +40,7 @@ struct FeedListView: View {
         }
       }
       Section("Feeds") {
-        ForEach(store.feeds.filter { !$0.isArchived }) { feed in
+        ForEach(store.shownFeeds) { feed in
           NavigationLink(value: Source.feed(feed.id)) {
             HStack {
               Text(feed.title)
@@ -51,11 +51,15 @@ struct FeedListView: View {
               }
             }
           }
-          .badge(feed.unread)
+          .badge(feed.unread(in: store.shows))
         }
         // A list with no feeds at all: the rows above stay, so a note here
         // rather than a full-screen empty state.
-        if store.feeds.isEmpty && !store.isLoading {
+        if store.shownFeeds.isEmpty && !store.feeds.isEmpty {
+          Text(store.shows.podcasts ? "No podcasts yet." : "No news feeds yet.")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        } else if store.feeds.isEmpty && !store.isLoading {
           Text(
             store.isOffline
               ? "Feeds show up once the server can be reached."
@@ -91,10 +95,40 @@ struct FeedListView: View {
     }
     .bottomControls {
       Button("Settings", systemImage: "gear") { showSettings = true }
+      // Servers before 2026.11 don't say which feeds are podcasts.
+      if store.canFilterKinds {
+        kindToggles
+      }
       Button("Refresh feeds", systemImage: "arrow.clockwise") {
         Task { await store.refreshServer() }
       }
       .disabled(store.isLoading)
     }
+  }
+
+  /// News and Podcasts: both on shows everything. Turning off the only one
+  /// on switches to the other, so the lists are never empty by choice.
+  @ViewBuilder private var kindToggles: some View {
+    Toggle(isOn: kindBinding(\.news, update: { $0.set(news: $1) })) {
+      Label("News", systemImage: "newspaper")
+    }
+    .toggleStyle(.button)
+    Toggle(isOn: kindBinding(\.podcasts, update: { $0.set(podcasts: $1) })) {
+      Label("Podcasts", systemImage: "headphones")
+    }
+    .toggleStyle(.button)
+  }
+
+  private func kindBinding(
+    _ kind: KeyPath<Shows, Bool>, update: @escaping (inout Shows, Bool) -> Void
+  ) -> Binding<Bool> {
+    Binding(
+      get: { store.shows[keyPath: kind] },
+      set: { value in
+        var shows = store.shows
+        update(&shows, value)
+        store.haptic(.toggle)
+        Task { await store.setShows(shows) }
+      })
   }
 }

@@ -14,6 +14,10 @@ struct Feed: Codable, Identifiable, Hashable {
   let tags: [String]
   var unread: Int
   let total: Int
+  /// How many of `total` and `unread` are podcast episodes; `nil` from
+  /// servers before 2026.11, which don't count them.
+  let episodes: Int?
+  var unreadEpisodes: Int?
   let lastFetched: Int64?
   let lastError: String?
   /// Removed from the server config but kept for its starred items.

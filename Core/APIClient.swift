@@ -93,9 +93,11 @@ struct APIClient: Sendable {
     try decode([Feed].self, try await send("GET", "/api/v1/feeds"))
   }
 
+  /// A page of a list. `media`: only episodes (`true`), only the rest
+  /// (`false`), or both.
   func items(
-    source: Source, unreadOnly: Bool, search: String? = nil, after next: NextPage? = nil,
-    limit: Int = 100
+    source: Source, unreadOnly: Bool, search: String? = nil, media: Bool? = nil,
+    after next: NextPage? = nil, limit: Int = 100
   ) async throws -> ItemPage {
     var query = [URLQueryItem(name: "limit", value: String(limit))]
     switch source {
@@ -108,6 +110,9 @@ struct APIClient: Sendable {
       query.append(URLQueryItem(name: "q", value: search))
     } else if unreadOnly && source != .starred {
       query.append(URLQueryItem(name: "unread", value: "true"))
+    }
+    if let media {
+      query.append(URLQueryItem(name: "media", value: String(media)))
     }
     switch next {
     case .cursor(let cursor): query.append(URLQueryItem(name: "cursor", value: cursor))
@@ -175,6 +180,13 @@ struct APIClient: Sendable {
   func markFeedRead(_ feed: String) async throws -> Int {
     let id = feed.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? feed
     let data = try await send("POST", "/api/v1/feeds/\(id)/read-all")
+    return try decode(Updated.self, data).updated
+  }
+
+  /// Marks every unread item a list shows read, in one request however many
+  /// pages it has.
+  func markRead(_ list: MarkRead) async throws -> Int {
+    let data = try await send("POST", "/api/v1/items/read-all", body: list)
     return try decode(Updated.self, data).updated
   }
 

@@ -137,6 +137,12 @@ through API v1 (`/api/v1`).
   how many changes are waiting to sync, or a red problem such as a rejected
   token, a server error or a server that can't be found. Check Now asks again;
   opening Settings checks too.
+- News and Podcasts toggles in the feed list's bottom bar (needs a pressbox
+  server that counts episodes, 2026.11): both on shows everything; one on shows
+  only news or only podcast episodes, in every list, with unread counts to
+  match, and hides feeds with nothing of that kind. Turning off the only one on
+  switches to the other. Mark all as read marks only the kind shown. The badge
+  and the widgets still count everything.
 
 ## [0.1.0] - 2026-11-07
 

@@ -21,6 +21,14 @@ final class Store {
   var items: [Item] = []
   var source: Source? = .all
   var unreadOnly = true
+  /// News, podcasts or both, chosen on the feed list.
+  var shows: Shows {
+    didSet {
+      if let data = try? JSONEncoder().encode(shows) {
+        UserDefaults.standard.set(data, forKey: "shows")
+      }
+    }
+  }
   /// Active full-text search; searches include read items.
   var search: String?
   /// Where the next page of `items` starts, if there is one.
@@ -103,6 +111,9 @@ final class Store {
     lockEnabled = UserDefaults.standard.bool(forKey: "lockEnabled")
     badgeEnabled = UserDefaults.standard.bool(forKey: "badgeEnabled")
     markReadOnScroll = UserDefaults.standard.bool(forKey: "markReadOnScroll")
+    shows =
+      UserDefaults.standard.data(forKey: "shows")
+      .flatMap { try? JSONDecoder().decode(Shows.self, from: $0) } ?? Shows()
     isLocked = lockEnabled
     if let snapshot = Cache.load() {
       feeds = snapshot.feeds
@@ -124,37 +135,72 @@ final class Store {
   var isConfigured: Bool {
     !server.trimmingCharacters(in: .whitespaces).isEmpty && !token.isEmpty
   }
+  /// Every unread item, news and podcasts alike: the app icon's badge and
+  /// the widgets.
   var totalUnread: Int { feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread } }
 
-  /// Tags of the feeds in the server's config, sorted.
-  var tags: [String] {
-    Set(feeds.filter { !$0.isArchived }.flatMap(\.tags)).sorted()
+  /// The server counts episodes, so the feed list can offer news, podcasts
+  /// or both.
+  var canFilterKinds: Bool { feeds.contains(where: \.countsEpisodes) }
+
+  /// The `media` filter for item lists, from `shows`.
+  var media: Bool? { canFilterKinds ? shows.media : nil }
+
+  /// Feeds in the server's config with items of the kinds shown.
+  var shownFeeds: [Feed] {
+    feeds.filter { !$0.isArchived && $0.isShown(in: shows) }
   }
 
-  /// Feeds in the server's config with this tag.
+  /// Tags of the feeds shown, sorted.
+  var tags: [String] {
+    Set(shownFeeds.flatMap(\.tags)).sorted()
+  }
+
+  /// Feeds shown with this tag.
   func feedsTagged(_ tag: String) -> [Feed] {
-    feeds.filter { !$0.isArchived && $0.tags.contains(tag) }
+    shownFeeds.filter { $0.tags.contains(tag) }
   }
 
   func unread(tagged tag: String) -> Int {
-    feedsTagged(tag).reduce(0) { $0 + $1.unread }
+    feedsTagged(tag).reduce(0) { $0 + $1.unread(in: shows) }
   }
 
-  /// Unread items in a list; Mark all as read marks these.
+  /// Unread items in a list, of the kinds shown; Mark all as read marks
+  /// these.
   func unread(in source: Source) -> Int {
     switch source {
-    case .all: totalUnread
-    case .feed(let id): feeds.first { $0.id == id }?.unread ?? 0
+    case .all: shownFeeds.reduce(0) { $0 + $1.unread(in: shows) }
+    case .feed(let id): feeds.first { $0.id == id }?.unread(in: shows) ?? 0
     case .tag(let tag): unread(tagged: tag)
     default: 0
     }
+  }
+
+  /// Shows news, podcasts or both. A feed with nothing left to show goes
+  /// back to all items.
+  func setShows(_ value: Shows) async {
+    guard value != shows else { return }
+    shows = value
+    if case .feed(let id) = source, let feed = feeds.first(where: { $0.id == id }),
+      !feed.isShown(in: shows)
+    {
+      source = .all
+    } else if case .tag(let tag) = source, feedsTagged(tag).isEmpty {
+      source = .all
+    }
+    await run { try await loadItems() }
   }
 
   var api: APIClient { APIClient(server: server, token: token) }
 
   func title(for source: Source) -> String {
     switch source {
-    case .all: "All items"
+    case .all:
+      switch media {
+      case .some(true): "All podcasts"
+      case .some(false): "All news"
+      case .none: "All items"
+      }
     case .starred: "Starred"
     case .feed(let id): feedTitle(id)
     case .tag(let tag): tag
@@ -331,7 +377,8 @@ final class Store {
     // A Mark all as read still waiting out its toast goes to the server
     // first, so the items come back read.
     await commitMarkAll(thenReload: false)
-    let page = try await api.items(source: source, unreadOnly: unreadOnly, search: search)
+    let page = try await api.items(
+      source: source, unreadOnly: unreadOnly, search: search, media: media)
     items = page.items
     nextPage = page.next
   }
@@ -360,7 +407,7 @@ final class Store {
     nextPage = nil
     await run {
       let page = try await api.items(
-        source: source, unreadOnly: unreadOnly, search: search, after: next)
+        source: source, unreadOnly: unreadOnly, search: search, media: media, after: next)
       items.append(contentsOf: page.items)
       nextPage = page.next
     }
@@ -443,7 +490,11 @@ final class Store {
       dropDownload(item.id)
     }
     if let i = feeds.firstIndex(where: { $0.id == item.feedId }) {
-      feeds[i].unread = max(0, feeds[i].unread + (value ? -1 : 1))
+      let change = value ? -1 : 1
+      feeds[i].unread = max(0, feeds[i].unread + change)
+      if item.isEpisode, let episodes = feeds[i].unreadEpisodes {
+        feeds[i].unreadEpisodes = max(0, episodes + change)
+      }
     }
     updateBadge()
     saveCache()
@@ -466,30 +517,49 @@ final class Store {
   /// is loaded.
   func markAllRead() async {
     guard let source else { return }
+    let hasUnread = { (feed: Feed) in feed.unread(in: self.shows) > 0 }
     let targets: [String]
     switch source {
     case .feed(let id): targets = [id]
-    case .tag(let tag): targets = feedsTagged(tag).filter { $0.unread > 0 }.map(\.id)
-    case .all: targets = feeds.filter { $0.unread > 0 }.map(\.id)
+    case .tag(let tag): targets = feedsTagged(tag).filter(hasUnread).map(\.id)
+    case .all: targets = shownFeeds.filter(hasUnread).map(\.id)
     default: return
     }
     guard !targets.isEmpty else { return }
     // An earlier one, still waiting, goes first.
     await commitMarkAll(thenReload: false)
     let count = unread(in: source)
+    let media = self.media
     let marked = Set(targets)
-    let unreadItems = Set(items.filter { !$0.read && marked.contains($0.feedId) }.map(\.id))
+    // Of a kind shown, in a feed being marked.
+    let affected = { (item: Item) in
+      marked.contains(item.feedId) && (media.map { $0 == item.isEpisode } ?? true)
+    }
+    let unreadItems = Set(items.filter { !$0.read && affected($0) }.map(\.id))
     pendingMarkAll = PendingMarkAll(
-      feeds: targets,
-      unread: Dictionary(
-        feeds.filter { marked.contains($0.id) }.map { ($0.id, $0.unread) },
+      source: source, media: media, feeds: targets,
+      before: Dictionary(
+        feeds.filter { marked.contains($0.id) }.map { ($0.id, $0) },
         uniquingKeysWith: { a, _ in a }),
       items: unreadItems, queue: queue, latestUnread: latestUnread)
-    for i in feeds.indices where marked.contains(feeds[i].id) { feeds[i].unread = 0 }
+    for i in feeds.indices where marked.contains(feeds[i].id) {
+      let episodes = feeds[i].unreadEpisodes ?? 0
+      switch media {
+      case .none:
+        feeds[i].unread = 0
+        if feeds[i].unreadEpisodes != nil { feeds[i].unreadEpisodes = 0 }
+      case .some(true):
+        feeds[i].unread = max(0, feeds[i].unread - episodes)
+        feeds[i].unreadEpisodes = 0
+      case .some(false):
+        // Only the episodes are left unread.
+        feeds[i].unread = episodes
+      }
+    }
     for id in unreadItems { update(id) { $0.read = true } }
     // As on the server: read items leave Up Next.
-    queue.removeAll { marked.contains($0.feedId) }
-    latestUnread.removeAll { marked.contains($0.feedId) }
+    queue.removeAll(where: affected)
+    latestUnread.removeAll(where: affected)
     updateBadge()
     saveCache()
     offerUndo(.markAll, count == 1 ? "Marked 1 item as read" : "Marked \(count) items as read")
@@ -502,7 +572,14 @@ final class Store {
     pendingMarkAll = nil
     if undoable?.kind == .markAll { hideUndo() }
     await run {
-      for id in pending.feeds { _ = try await api.markFeedRead(id) }
+      if let media = pending.media {
+        // Only news, or only episodes: the list's own filters, in one
+        // request.
+        _ = try await api.markRead(MarkRead(source: pending.source, media: media))
+      } else {
+        // Feed by feed, which servers without items/read-all have too.
+        for id in pending.feeds { _ = try await api.markFeedRead(id) }
+      }
     }
     if thenReload { await reload() }
   }
@@ -512,7 +589,10 @@ final class Store {
     guard let pending = pendingMarkAll else { return }
     pendingMarkAll = nil
     for i in feeds.indices {
-      if let unread = pending.unread[feeds[i].id] { feeds[i].unread = unread }
+      if let before = pending.before[feeds[i].id] {
+        feeds[i].unread = before.unread
+        feeds[i].unreadEpisodes = before.unreadEpisodes
+      }
     }
     for id in pending.items { update(id) { $0.read = false } }
     queue = pending.queue

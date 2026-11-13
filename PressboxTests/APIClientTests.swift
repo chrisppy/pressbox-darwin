@@ -116,6 +116,14 @@ struct APIClientItemsTests {
     #expect(server.last?.query == ["unread": "true", "media": "true", "limit": "5"])
   }
 
+  @Test func onlyEpisodesOrOnlyTheRest() async throws {
+    let (api, server) = StubServer.client(body: #"{"items":[]}"#)
+    _ = try await api.items(source: .all, unreadOnly: true, media: true)
+    #expect(server.last?.query == ["limit": "100", "unread": "true", "media": "true"])
+    _ = try await api.items(source: .tag("tech"), unreadOnly: false, media: false)
+    #expect(server.last?.query == ["limit": "100", "tag": "tech", "media": "false"])
+  }
+
   @Test func oneItem() async throws {
     let (api, server) = StubServer.client(
       body: #"{"id":9,"feed_id":"news","title":"Nine","published":0,"read":false,"starred":true}"#)
@@ -151,6 +159,16 @@ struct APIClientChangeTests {
     #expect(try await api.markFeedRead("news") == 3)
     #expect(server.last?.method == "POST")
     #expect(server.last?.path == "/api/v1/feeds/news/read-all")
+  }
+
+  @Test func marksAListRead() async throws {
+    let (api, server) = StubServer.client(body: #"{"updated":4}"#)
+    #expect(try await api.markRead(MarkRead(source: .tag("tech"), media: true)) == 4)
+    #expect(server.last?.method == "POST")
+    #expect(server.last?.path == "/api/v1/items/read-all")
+    #expect(try server.last?.decode(MarkRead.self) == MarkRead(source: .tag("tech"), media: true))
+    let body = String(decoding: try #require(server.last?.body), as: UTF8.self)
+    #expect(!body.contains("feed"), "nil filters are left out")
   }
 
   @Test func refreshes() async throws {

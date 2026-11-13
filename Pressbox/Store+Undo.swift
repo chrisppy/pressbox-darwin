@@ -25,10 +25,14 @@ struct Undoable: Identifiable {
 /// goes, so Undo needs nothing from the server (which can't mark a feed
 /// unread again). What the lists showed before, to put back on Undo.
 struct PendingMarkAll {
+  /// The list marked, and which kind of its items (`media`, as for item
+  /// lists: `nil` for both).
+  let source: Source
+  let media: Bool?
   /// The feeds to mark read on the server.
   let feeds: [String]
-  /// Their unread counts before.
-  let unread: [String: Int]
+  /// The feeds as they were before, for their unread counts.
+  let before: [String: Feed]
   /// The items in the lists that were unread.
   let items: Set<Int64>
   let queue: [Item]

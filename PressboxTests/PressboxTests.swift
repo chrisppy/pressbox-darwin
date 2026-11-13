@@ -210,6 +210,55 @@ struct ModelTests {
   }
 }
 
+struct ShowsTests {
+  /// A feed decoded as from the API; `episodes` nil leaves out the counts,
+  /// as servers before 2026.11 do.
+  private func feed(
+    total: Int, unread: Int, episodes: Int?, unreadEpisodes: Int? = nil
+  ) throws -> Feed {
+    let counts =
+      episodes.map { #","episodes":\#($0),"unread_episodes":\#(unreadEpisodes ?? 0)"# } ?? ""
+    let json =
+      #"{"id":"f","title":"F","url":"u","tags":[],"unread":\#(unread),"total":\#(total)\#(counts)}"#
+    return try APIClient.decoder.decode(Feed.self, from: Data(json.utf8))
+  }
+
+  @Test func neverNeither() {
+    var shows = Shows()
+    #expect(shows.isBoth && shows.media == nil)
+    shows.set(news: false)
+    #expect(!shows.news && shows.podcasts && shows.media == true)
+    // Turning off the only one on switches to the other.
+    shows.set(podcasts: false)
+    #expect(shows.news && !shows.podcasts && shows.media == false)
+    shows.set(podcasts: true)
+    #expect(shows.isBoth)
+  }
+
+  @Test func feedsShownByWhatTheyHave() throws {
+    let news = Shows(news: true, podcasts: false)
+    let podcasts = Shows(news: false, podcasts: true)
+    let podcast = try feed(total: 5, unread: 2, episodes: 5, unreadEpisodes: 2)
+    let blog = try feed(total: 5, unread: 2, episodes: 0)
+    let mixed = try feed(total: 5, unread: 3, episodes: 2, unreadEpisodes: 1)
+    let empty = try feed(total: 0, unread: 0, episodes: 0)
+    let old = try feed(total: 5, unread: 2, episodes: nil)
+    #expect(!podcast.isShown(in: news) && podcast.isShown(in: podcasts))
+    #expect(blog.isShown(in: news) && !blog.isShown(in: podcasts))
+    #expect(mixed.isShown(in: news) && mixed.isShown(in: podcasts))
+    #expect(empty.isShown(in: news) && !empty.isShown(in: podcasts))
+    #expect(!old.countsEpisodes && old.isShown(in: news) && old.isShown(in: podcasts))
+  }
+
+  @Test func unreadCountsTheKindsShown() throws {
+    let mixed = try feed(total: 9, unread: 5, episodes: 4, unreadEpisodes: 2)
+    #expect(mixed.unread(in: Shows()) == 5)
+    #expect(mixed.unread(in: Shows(news: true, podcasts: false)) == 3)
+    #expect(mixed.unread(in: Shows(news: false, podcasts: true)) == 2)
+    #expect(try feed(total: 5, unread: 2, episodes: nil).unread(in: Shows(podcasts: false)) == 2)
+  }
+}
+
 struct FormatTimeTests {
   @Test(arguments: [
     (0.0, "0:00"), (59.9, "0:59"), (61, "1:01"), (3600, "1:00:00"), (3725, "1:02:05"),

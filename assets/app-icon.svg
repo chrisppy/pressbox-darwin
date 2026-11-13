@@ -3,9 +3,10 @@
 SPDX-FileCopyrightText: 2026 Chris Palmer <chris@red-oxide.org>
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
-<!-- The iOS app icon: the logo full-bleed, since iOS rounds the corners
-     itself. Pressbox/Assets.xcassets/AppIcon.appiconset/AppIcon.png is
-     rendered from this at 1024x1024, without transparency.
+<!-- The app icon: the logo full-bleed and square, since iOS and macOS
+     round the corners themselves. AppIcon.png and the AppIcon-mac-*.png
+     sizes in Pressbox/Assets.xcassets/AppIcon.appiconset are rendered from
+     this, without transparency.
      pressbox: home plate (in true proportions: square-cornered top half,
      45° edges to the point) holding the day's headlines, which taper with
      it. Birdland colors: cream plate, Orioles oranges, black field. -->

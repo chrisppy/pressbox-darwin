@@ -78,7 +78,7 @@ struct FeedListView: View {
             }
           }
         } header: {
-          Text("Removed feeds")
+          Text("Removed Feeds")
         } footer: {
           Text("No longer in the server's config. Kept until you unstar their items.")
         }
@@ -99,7 +99,7 @@ struct FeedListView: View {
       if store.canFilterKinds {
         kindToggles(store)
       }
-      Button("Refresh feeds", systemImage: "arrow.clockwise") {
+      Button("Refresh Feeds", systemImage: "arrow.clockwise") {
         Task { await store.refreshServer() }
       }
       .disabled(store.isLoading)

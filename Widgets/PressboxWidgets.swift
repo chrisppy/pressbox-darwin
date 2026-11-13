@@ -152,7 +152,7 @@ struct UnreadView: View {
       .font(.caption.weight(.semibold))
       if snapshot.latest.isEmpty {
         Spacer()
-        Text("All caught up").font(.headline).frame(maxWidth: .infinity)
+        Text("All Caught Up").font(.headline).frame(maxWidth: .infinity)
         Spacer()
       } else {
         ForEach(snapshot.latest.prefix(rows)) { entry in

@@ -17,7 +17,7 @@ struct MiniPlayer: View {
       // between them: far apart, each with a full-size target, so a tap
       // meant for one doesn't land on the other.
       HStack(spacing: 12) {
-        Button("Back \(Int(playback.skipBack)) seconds", systemImage: playback.skipBackSymbol) {
+        Button("Back \(Int(playback.skipBack)) Seconds", systemImage: playback.skipBackSymbol) {
           playback.skip(-playback.skipBack)
         }
         .frame(width: 44, height: 44)
@@ -199,11 +199,11 @@ struct NowPlayingView: View {
   private var controls: some View {
     let playback = store.playback
     return HStack(spacing: 32) {
-      Button("Previous chapter", systemImage: "backward.end.fill") {
+      Button("Previous Chapter", systemImage: "backward.end.fill") {
         playback.jumpChapter(next: false)
       }
       .disabled(playback.chapters.isEmpty)
-      Button("Back \(Int(playback.skipBack)) seconds", systemImage: playback.skipBackSymbol) {
+      Button("Back \(Int(playback.skipBack)) Seconds", systemImage: playback.skipBackSymbol) {
         playback.skip(-playback.skipBack)
       }
       Button(
@@ -214,11 +214,11 @@ struct NowPlayingView: View {
       }
       .font(.system(size: 56))
       Button(
-        "Forward \(Int(playback.skipForward)) seconds", systemImage: playback.skipForwardSymbol
+        "Forward \(Int(playback.skipForward)) Seconds", systemImage: playback.skipForwardSymbol
       ) {
         playback.skip(playback.skipForward)
       }
-      Button("Next chapter", systemImage: "forward.end.fill") {
+      Button("Next Chapter", systemImage: "forward.end.fill") {
         playback.jumpChapter(next: true)
       }
       .disabled(playback.chapters.isEmpty)

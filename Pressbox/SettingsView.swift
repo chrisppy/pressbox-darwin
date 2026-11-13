@@ -36,7 +36,7 @@ struct SettingsView: View {
           approveSection
           Section {
             Toggle(Self.lockLabel, isOn: $store.lockEnabled)
-            Toggle("Mark as read when scrolled past", isOn: $store.markReadOnScroll)
+            Toggle("Mark as Read When Scrolled Past", isOn: $store.markReadOnScroll)
             Toggle(
               "Unread count on app icon",
               isOn: Binding(
@@ -51,7 +51,7 @@ struct SettingsView: View {
           playbackSection
           downloadsSection
           Section {
-            Button("Forget this device", role: .destructive) { confirmForget = true }
+            Button("Forget This Device", role: .destructive) { confirmForget = true }
               .confirmationDialog("Forget this device?", isPresented: $confirmForget) {
                 Button("Forget", role: .destructive) { store.forget() }
               }
@@ -120,7 +120,7 @@ struct SettingsView: View {
         }
         Button("Cancel", role: .cancel) { store.cancelPairing() }
       } else {
-        Button("Pair this device") {
+        Button("Pair This Device") {
           store.startPairing(server: server, name: deviceName)
         }
         .disabled(server.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -133,7 +133,7 @@ struct SettingsView: View {
       DisclosureGroup("Use a token instead") {
         SecureField("Token from pressboxctl add-device", text: $manualToken)
           .plainEntry()
-        Button("Use token") {
+        Button("Use Token") {
           store.server = server.trimmingCharacters(in: .whitespacesAndNewlines)
           store.token = manualToken.trimmingCharacters(in: .whitespacesAndNewlines)
           Task {
@@ -172,7 +172,7 @@ struct SettingsView: View {
         Text(approveStatus).foregroundStyle(.secondary)
       }
     } header: {
-      Text("Approve a device")
+      Text("Approve a Device")
     } footer: {
       Text(
         "Enter the code another device shows while pairing. It's added to your account unless you name another user."
@@ -298,11 +298,11 @@ extension SettingsView {
   @ViewBuilder fileprivate var playbackSection: some View {
     @Bindable var playback = store.playback
     Section {
-      Picker("Skip back", selection: $playback.skipBack) {
-        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) seconds").tag(Double($0)) }
+      Picker("Skip Back", selection: $playback.skipBack) {
+        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) Seconds").tag(Double($0)) }
       }
-      Picker("Skip forward", selection: $playback.skipForward) {
-        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) seconds").tag(Double($0)) }
+      Picker("Skip Forward", selection: $playback.skipForward) {
+        ForEach(Playback.skipChoices, id: \.self) { Text("\($0) Seconds").tag(Double($0)) }
       }
       Picker("Speed", selection: $playback.defaultRate) {
         ForEach(Playback.rates.sorted(), id: \.self) { Text(Playback.rateLabel($0)).tag($0) }
@@ -321,11 +321,11 @@ extension SettingsView {
   @ViewBuilder fileprivate var downloadsSection: some View {
     @Bindable var downloads = Downloads.shared
     Section {
-      Toggle("Download new episodes", isOn: $downloads.automatic)
+      Toggle("Download New Episodes", isOn: $downloads.automatic)
       #if os(iOS)
-        Picker("Download over", selection: $downloads.cellular) {
-          Text("Wi-Fi only").tag(false)
-          Text("Wi-Fi and cellular").tag(true)
+        Picker("Download Over", selection: $downloads.cellular) {
+          Text("Wi-Fi Only").tag(false)
+          Text("Wi-Fi and Cellular").tag(true)
         }
       #endif
       LabeledContent(

@@ -173,7 +173,7 @@ struct ItemListView: View {
     // a few seconds after.
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
-        Button("Mark all as read", systemImage: "checkmark") { confirmMarkAll = true }
+        Button("Mark All as Read", systemImage: "checkmark") { confirmMarkAll = true }
           .disabled(markAllCount == 0)
           // On the button, so the action sheet comes from it.
           .confirmationDialog(
@@ -225,7 +225,7 @@ extension ItemListView {
         description: Text(Self.starHint))
     } else if store.unreadOnly {
       ContentUnavailableView {
-        Label("All caught up", systemImage: "checkmark.circle")
+        Label("All Caught Up", systemImage: "checkmark.circle")
       } description: {
         Text("No unread items in \(list).")
       } actions: {

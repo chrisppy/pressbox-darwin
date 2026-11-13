@@ -14,6 +14,10 @@ through API v1 (`/api/v1`).
 
 ## [2026.11.0] - Unreleased
 
+- Buttons, menu items, toggles, pickers and section headers use title-style
+  capitalization, as the Human Interface Guidelines ask: Mark All as Read,
+  Refresh Feeds, Forget This Device, Download New Episodes, 15 Seconds and so
+  on.
 - A long press on an item offers Mark as Read or Unread and Star first, the same
   actions as its swipes. Mark all as read and Forget this device ask from their
   own buttons, the undo and status banners and the mini player get the scroll

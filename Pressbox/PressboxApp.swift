@@ -61,6 +61,11 @@ struct ContentView: View {
   @Environment(\.scenePhase) private var scenePhase
   @State private var selectedItem: Item.ID?
   @State private var showSettings = false
+  /// The list and the item open, kept with the window: when iOS closes the
+  /// app in the background, it reopens where it was. Swiping it away in the
+  /// app switcher discards these, and it starts afresh.
+  @SceneStorage("source") private var savedSource = ""
+  @SceneStorage("selectedItem") private var savedItem = 0
 
   #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -137,9 +142,17 @@ struct ContentView: View {
         LockView()
       }
     }
+    .onChange(of: store.source) { _, source in
+      // In an array: JSONDecoder may not take a bare `null`.
+      if let data = try? JSONEncoder().encode([source]) {
+        savedSource = String(decoding: data, as: UTF8.self)
+      }
+    }
+    .onChange(of: selectedItem) { _, id in savedItem = id.map(Int.init) ?? 0 }
     .task {
       if store.isLocked { await store.unlock() }
       if store.isConfigured {
+        await restoreState()
         await store.reload()
       } else {
         showSettings = true
@@ -170,6 +183,22 @@ struct ContentView: View {
         }
       }
     #endif
+  }
+}
+
+extension ContentView {
+  /// Back to the list and item the window had open.
+  fileprivate func restoreState() async {
+    if let saved = try? JSONDecoder().decode([Source?].self, from: Data(savedSource.utf8)),
+      let source = saved.first
+    {
+      store.source = source
+    }
+    guard selectedItem == nil, savedItem != 0 else { return }
+    let id = Int64(savedItem)
+    // From the offline cache, or the server.
+    await store.reveal(id)
+    if store.item(id) != nil { selectedItem = id }
   }
 }
 

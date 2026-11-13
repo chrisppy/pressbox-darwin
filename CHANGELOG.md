@@ -123,6 +123,11 @@ through API v1 (`/api/v1`).
   unstar, and space to play or pause (or play the selected episode). They work
   while the list has the focus (click it, or Tab to it), so typing in the search
   field isn't affected.
+- Picks up where you left off: when iOS closes pressbox in the background, it
+  reopens to the same list and item (swiping it away in the app switcher still
+  starts afresh). On iPhone and iPad, articles and episode pages also reopen
+  where they were scrolled to, at any time; the 200 most recent are kept on the
+  device.
 
 ## [0.1.0] - 2026-11-07
 

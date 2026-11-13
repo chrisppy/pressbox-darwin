@@ -20,7 +20,7 @@ struct ArticleView: View {
       if let full {
         HTMLView(
           html: Self.page(for: full, feedTitle: store.feedTitle(full.feedId)),
-          baseURL: full.link)
+          baseURL: full.link, itemID: full.id)
       } else {
         ProgressView()
       }
@@ -156,11 +156,14 @@ struct ArticleView: View {
 }
 
 /// Renders article HTML with JavaScript off; links open in the default
-/// browser (Safari on iPhone and iPad).
+/// browser (Safari on iPhone and iPad). On iPhone and iPad an item reopens
+/// where it was scrolled to (see `ReadingPositions`).
 @MainActor
 struct HTMLView {
   let html: String
   let baseURL: URL?
+  /// The item shown, for its reading position.
+  var itemID: Int64?
 
   func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -179,6 +182,14 @@ struct HTMLView {
     #else
       view.isOpaque = false
       view.backgroundColor = .clear
+      coordinator.offsetObservation = view.scrollView.observe(\.contentOffset) {
+        [weak coordinator] scrollView, _ in
+        MainActor.assumeIsolated {
+          // From the top of the content, under the navigation bar.
+          let y = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+          coordinator?.scrolled(to: Double(y))
+        }
+      }
     #endif
     return view
   }
@@ -186,12 +197,55 @@ struct HTMLView {
   private func update(_ view: WKWebView, coordinator: Coordinator) {
     guard coordinator.loaded != html else { return }
     coordinator.loaded = html
+    coordinator.itemID = itemID
+    // Loading moves the page to the top: that isn't the reader scrolling.
+    coordinator.restoring = true
     view.loadHTMLString(html, baseURL: baseURL)
   }
 
   @MainActor
   final class Coordinator: NSObject, WKNavigationDelegate {
     var loaded: String?
+    var itemID: Int64?
+    /// Between loading a page and scrolling it to where it was read to.
+    var restoring = false
+    #if os(iOS)
+      var offsetObservation: NSKeyValueObservation?
+      private var saveTask: Task<Void, Never>?
+    #endif
+
+    /// The reader scrolled: keep the position once the page settles.
+    func scrolled(to y: Double) {
+      #if os(iOS)
+        guard !restoring, let id = itemID else { return }
+        saveTask?.cancel()
+        saveTask = Task {
+          try? await Task.sleep(for: .milliseconds(500))
+          guard !Task.isCancelled else { return }
+          ReadingPositions.set(y, for: id)
+        }
+      #endif
+    }
+
+    /// Loaded: back to where the item was read to, if it was.
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+      #if os(iOS)
+        if let id = itemID, let y = ReadingPositions.offset(for: id) {
+          let scrollView = webView.scrollView
+          let inset = scrollView.adjustedContentInset
+          let bottom = scrollView.contentSize.height + inset.bottom - scrollView.bounds.height
+          let to = min(CGFloat(y) - inset.top, max(-inset.top, bottom))
+          scrollView.setContentOffset(CGPoint(x: 0, y: to), animated: false)
+        }
+      #endif
+      restoring = false
+    }
+
+    func webView(
+      _ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error
+    ) {
+      restoring = false
+    }
 
     func webView(
       _ webView: WKWebView, decidePolicyFor action: WKNavigationAction
@@ -230,3 +284,37 @@ struct HTMLView {
     }
   }
 #endif
+
+/// How far down each item was scrolled, so it reopens there: the most
+/// recent 200, on this device. iPhone and iPad only: on Mac the web view
+/// doesn't expose its scroll view, and article JavaScript is off.
+@MainActor
+enum ReadingPositions {
+  private struct Entry: Codable {
+    let id: Int64
+    let y: Double
+  }
+
+  private static let key = "readingPositions"
+  private static let limit = 200
+  /// Near the top counts as not started.
+  private static let top: Double = 40
+  /// Oldest first.
+  private static var entries: [Entry] = {
+    guard let data = UserDefaults.standard.data(forKey: key) else { return [] }
+    return (try? JSONDecoder().decode([Entry].self, from: data)) ?? []
+  }()
+
+  static func offset(for id: Int64) -> Double? {
+    entries.last { $0.id == id }?.y
+  }
+
+  static func set(_ y: Double, for id: Int64) {
+    entries.removeAll { $0.id == id }
+    if y > top { entries.append(Entry(id: id, y: y)) }
+    if entries.count > limit { entries.removeFirst(entries.count - limit) }
+    if let data = try? JSONEncoder().encode(entries) {
+      UserDefaults.standard.set(data, forKey: key)
+    }
+  }
+}

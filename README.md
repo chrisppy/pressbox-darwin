@@ -166,8 +166,8 @@ its license in an SPDX header (`reuse lint` checks this, also in
   [Mozilla Public License 2.0](LICENSES/MPL-2.0.txt). It keeps changes to its
   files open while allowing distribution through the App Store, which the GPL
   does not.
-- The app icon (`assets/app-icon.svg` and the rendered `AppIcon.png`) is
-  licensed under
+- The app icon (`Pressbox/AppIcon.icon` and its flat version,
+  `assets/app-icon.svg`) is licensed under
   [Creative Commons Attribution-ShareAlike 4.0](LICENSES/CC-BY-SA-4.0.txt).
 
 ### Name and logo

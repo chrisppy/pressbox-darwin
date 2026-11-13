@@ -23,6 +23,9 @@ through API v1 (`/api/v1`).
   Birdland background, so a half-height sheet lets the screen beneath show
   around it. The bottom toolbar puts Back and Feeds in one glass group and the
   filters in another, and Mark all as read is a plain checkmark.
+- A new app icon: the home plate is filled rather than outlined, and the icon is
+  layered (an Icon Composer file), so it picks up Liquid Glass and the dark,
+  clear and tinted Home Screen looks on iPhone, iPad and Mac.
 - The logic with no screens is in `Core/`, which also builds as a Swift package:
   `just test` runs its unit tests with `swift test` on Linux or a Mac, and CI
   runs them on Linux too. `just test-app` runs all the tests in the iOS

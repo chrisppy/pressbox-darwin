@@ -49,7 +49,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.red-oxide.pressbox
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: true
-        # Assets.xcassets/AppIcon.appiconset, rendered from assets/app-icon.svg.
+        # Pressbox/AppIcon.icon, the layered Icon Composer icon (XcodeGen
+        # 2.45.1 or later adds it as a resource).
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Assets.xcassets/AccentColor.colorset: Orioles orange, from Birdland.
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

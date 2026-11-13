@@ -29,23 +29,26 @@ final class Store {
   var errorMessage: String?
   /// The last load failed for lack of a connection; showing cached data.
   var isOffline = false
+  // What the Store+ files use is internal, not private (Swift's private ends
+  // at the file); only the store and its extensions set these.
+
   /// Full articles opened or prefetched, for offline reading.
-  private(set) var articles: [Int64: Item] = [:]
+  var articles: [Int64: Item] = [:]
   /// Read, starred and position changes the server hasn't had yet.
   private(set) var outbox = Outbox()
   private var isFlushing = false
   /// The episodes to play next, in order, as the server keeps them.
-  private(set) var queue: [Item] = []
+  var queue: [Item] = []
   /// The server keeps a queue (older ones don't), so Up Next is shown.
-  private(set) var hasQueue = false
+  var hasQueue = false
   /// The newest unread items in any feed, for the widgets.
-  private var latestUnread: [Item] = []
-  private var widgetUpdate: Task<Void, Never>?
+  var latestUnread: [Item] = []
+  var widgetUpdate: Task<Void, Never>?
 
   // Pairing in progress: the code to show the user.
   var pairCode: String?
   var pairStatus: String?
-  private var pairTask: Task<Void, Never>?
+  var pairTask: Task<Void, Never>?
 
   /// Plays podcast episodes.
   let playback = Playback()
@@ -121,7 +124,7 @@ final class Store {
     }
   }
 
-  private var api: APIClient { APIClient(server: server, token: token) }
+  var api: APIClient { APIClient(server: server, token: token) }
 
   func title(for source: Source) -> String {
     switch source {
@@ -141,7 +144,7 @@ final class Store {
   }
 
   /// Runs a request, showing any error instead of throwing it.
-  private func run(_ body: () async throws -> Void) async {
+  func run(_ body: () async throws -> Void) async {
     do {
       try await body()
       errorMessage = nil
@@ -166,7 +169,7 @@ final class Store {
   /// Sends a change to the server, or keeps it in the outbox to send later
   /// if the server can't be reached (or the request was cancelled). Returns
   /// false only if the server refused it.
-  private func send(_ change: Change) async -> Bool {
+  func send(_ change: Change) async -> Bool {
     let before = outbox
     defer { if outbox != before { Cache.saveOutbox(outbox) } }
     // While the outbox is being sent, queue behind it, so an older change to
@@ -219,7 +222,7 @@ final class Store {
     }
   }
 
-  private func saveCache() {
+  func saveCache() {
     Cache.save(
       Snapshot(feeds: feeds, items: items, articles: articles, queue: hasQueue ? queue : nil))
   }
@@ -345,46 +348,6 @@ final class Store {
     dropDownload(item.id)
   }
 
-  // MARK: Up Next
-
-  private func loadQueue() async throws {
-    do {
-      queue = try await api.queue()
-      hasQueue = true
-    } catch APIError.notFound {
-      // An older server, without a queue.
-      queue = []
-      hasQueue = false
-    }
-  }
-
-  func isQueued(_ item: Item) -> Bool { queue.contains { $0.id == item.id } }
-
-  /// Adds an episode to Up Next: to play next, or after the rest. Moves it
-  /// there if it is queued already.
-  func enqueue(_ item: Item, next: Bool = false) async {
-    var new = queue.filter { $0.id != item.id }
-    if next { new.insert(item, at: 0) } else { new.append(item) }
-    await setQueue(new)
-  }
-
-  func dequeue(_ item: Item) async {
-    await setQueue(queue.filter { $0.id != item.id })
-  }
-
-  /// Replaces Up Next (to reorder it, say): here at once, and on the server
-  /// as soon as it can be reached.
-  func setQueue(_ new: [Item]) async {
-    let old = queue
-    queue = new
-    saveCache()
-    updateWidgets()
-    if !(await send(.queue(new.map(\.id)))) {
-      queue = old
-      saveCache()
-    }
-  }
-
   /// Downloads the content of unread items not cached yet, so they can be
   /// read offline.
   private func prefetchUnread() async {
@@ -456,115 +419,6 @@ final class Store {
     if articles[id] != nil { change(&articles[id]!) }
   }
 
-  // MARK: Pairing
-
-  /// Asks the server to pair this device and waits for approval.
-  func startPairing(server newServer: String, name: String) {
-    pairTask?.cancel()
-    server = newServer.trimmingCharacters(in: .whitespacesAndNewlines)
-    pairCode = nil
-    pairStatus = "Contacting the server…"
-    let client = APIClient(server: server, token: nil)
-    pairTask = Task {
-      do {
-        let start = try await client.pairStart(name: name)
-        pairCode = start.code
-        pairStatus = "Waiting for approval…"
-        let deadline = Date().addingTimeInterval(TimeInterval(start.expiresIn))
-        while Date() < deadline {
-          try await Task.sleep(for: .seconds(2))
-          if let approved = try await client.pairPoll(start.pollId) {
-            token = approved.token
-            me = nil
-            pairCode = nil
-            pairStatus = "Paired as \(approved.name)."
-            await reload()
-            return
-          }
-        }
-        pairCode = nil
-        pairStatus = "The code expired. Try again."
-      } catch is CancellationError {
-      } catch {
-        pairCode = nil
-        pairStatus = error.localizedDescription
-      }
-    }
-  }
-
-  func cancelPairing() {
-    pairTask?.cancel()
-    pairCode = nil
-    pairStatus = nil
-  }
-
-  /// Approves another device's pairing code, for `user` if given (admins
-  /// only). Returns "device for user" on success.
-  func approve(code: String, user: String? = nil) async -> String? {
-    var result: String?
-    await run {
-      let approved = try await api.approve(code: code, user: user)
-      result = "\(approved.name) for \(approved.user)"
-    }
-    return result
-  }
-
-  // MARK: Widgets
-
-  /// Writes what the widgets show, a moment after the last change (one action
-  /// can change several things).
-  func updateWidgets() {
-    widgetUpdate?.cancel()
-    widgetUpdate = Task {
-      try? await Task.sleep(for: .milliseconds(300))
-      guard !Task.isCancelled else { return }
-      WidgetStore.save(widgetSnapshot())
-    }
-  }
-
-  private func widgetSnapshot() -> WidgetSnapshot {
-    let entry = { (item: Item) in
-      WidgetSnapshot.Entry(
-        id: item.id, title: item.title, feed: self.feedTitle(item.feedId),
-        published: item.published)
-    }
-    var snapshot = WidgetSnapshot()
-    snapshot.configured = isConfigured
-    snapshot.unread = totalUnread
-    snapshot.latest = latestUnread.filter { !$0.read }.map(entry)
-    if let item = playback.item {
-      snapshot.nowPlaying = entry(item)
-      snapshot.isPlaying = playback.isPlaying
-      snapshot.position = playback.position
-      snapshot.duration = playback.duration
-      snapshot.rate = playback.rate
-    }
-    snapshot.hasQueue = hasQueue
-    snapshot.upNext = queue.filter { $0.id != playback.item?.id }.prefix(4).map(entry)
-    snapshot.written = Date()
-    return snapshot
-  }
-
-  /// The widget's button: pauses or resumes, or plays the first in Up Next.
-  func togglePlayback() async {
-    if playback.item != nil {
-      playback.togglePause()
-    } else if let next = queue.first {
-      await playback.play(next)
-    }
-  }
-
-  /// Shows an item a widget opened, fetching it if no list here has it.
-  func reveal(_ id: Int64) async {
-    if item(id) == nil {
-      await run {
-        let full = try await api.item(id)
-        articles[id] = full
-      }
-    }
-    if source == nil { source = .all }
-  }
-
   func forget() {
     playback.discard()
     token = ""
@@ -598,82 +452,5 @@ final class Store {
     let ok = try? await context.evaluatePolicy(
       .deviceOwnerAuthentication, localizedReason: "Unlock your feeds")
     isLocked = !(ok ?? false)
-  }
-
-  // MARK: Unread badge and background refresh
-
-  func setBadgeEnabled(_ enabled: Bool) async {
-    if enabled {
-      let granted =
-        (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.badge]))
-        ?? false
-      badgeEnabled = granted
-      if !granted { errorMessage = Self.allowBadgesMessage }
-    } else {
-      badgeEnabled = false
-    }
-    updateBadge()
-    Self.scheduleBackgroundRefresh()
-  }
-
-  private func updateBadge() {
-    let count = badgeEnabled ? totalUnread : 0
-    UNUserNotificationCenter.current().setBadgeCount(count)
-    updateWidgets()
-  }
-
-  #if os(macOS)
-    private static let allowBadgesMessage =
-      "Allow badges for pressbox in System Settings › Notifications."
-  #else
-    private static let allowBadgesMessage = "Allow badges for pressbox in the Settings app."
-  #endif
-
-  /// Asks iOS to wake the app in a while to update the badge. iOS decides
-  /// when, based on how often the app is used. The Mac app has no background
-  /// refresh; it reloads on a timer while open instead (see `ContentView`).
-  nonisolated static func scheduleBackgroundRefresh() {
-    #if os(iOS)
-      // For the badge and the widgets.
-      guard !(UserDefaults.standard.string(forKey: "server") ?? "").isEmpty else {
-        BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: refreshTaskID)
-        return
-      }
-      let request = BGAppRefreshTaskRequest(identifier: refreshTaskID)
-      request.earliestBeginDate = Date().addingTimeInterval(30 * 60)
-      try? BGTaskScheduler.shared.submit(request)
-    #endif
-  }
-
-  /// The background refresh: fetch unread counts and set the badge.
-  nonisolated static func backgroundRefresh() async {
-    scheduleBackgroundRefresh()
-    let defaults = UserDefaults.standard
-    guard let server = defaults.string(forKey: "server"),
-      let token = Keychain.token()
-    else { return }
-    let api = APIClient(server: server, token: token)
-    guard let feeds = try? await api.feeds() else { return }
-    let unread = feeds.filter { !$0.isArchived }.reduce(0) { $0 + $1.unread }
-    if defaults.bool(forKey: "badgeEnabled") {
-      try? await UNUserNotificationCenter.current().setBadgeCount(unread)
-    }
-    // The widgets: new counts and items; what plays is as the app left it.
-    var snapshot = WidgetStore.load()
-    snapshot.configured = true
-    snapshot.unread = unread
-    // New episodes, downloaded while the app is away.
-    if let episodes = try? await api.unreadEpisodes(limit: 50) {
-      await Downloads.shared.sync(unread: episodes, api: api)
-    }
-    if let latest = try? await api.items(source: .all, unreadOnly: true, limit: 8).items {
-      let titles = Dictionary(feeds.map { ($0.id, $0.title) }, uniquingKeysWith: { a, _ in a })
-      snapshot.latest = latest.map {
-        WidgetSnapshot.Entry(
-          id: $0.id, title: $0.title, feed: titles[$0.feedId] ?? $0.feedId,
-          published: $0.published)
-      }
-    }
-    WidgetStore.save(snapshot)
   }
 }

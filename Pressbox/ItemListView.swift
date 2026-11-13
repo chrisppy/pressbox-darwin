@@ -137,11 +137,13 @@ struct ItemListView: View {
             get: { store.unreadOnly },
             set: { value in Task { await store.setUnreadOnly(value) } })
         ) {
-          // The unread dot, as on the rows: filled for unread only, an
-          // outline for all.
+          // A filter, as in Mail: filled while it hides read items. The
+          // dot stays for marking an item read or unread.
           Label(
             store.unreadOnly ? "Unread only" : "All items",
-            systemImage: store.unreadOnly ? "circle.fill" : "circle")
+            systemImage: store.unreadOnly
+              ? "line.3.horizontal.decrease.circle.fill"
+              : "line.3.horizontal.decrease.circle")
         }
         .toggleStyle(.button)
       }

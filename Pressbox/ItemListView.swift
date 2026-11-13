@@ -210,7 +210,8 @@ extension ItemListView {
     } else {
       ContentUnavailableView(
         "No items", systemImage: "tray",
-        description: Text("Nothing in \(list) yet. New items show up as the server fetches its feeds."))
+        description: Text(
+          "Nothing in \(list) yet. New items show up as the server fetches its feeds."))
     }
   }
 

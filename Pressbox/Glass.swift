@@ -16,14 +16,4 @@ extension View {
       .padding(.horizontal)
       .padding(.bottom, 8)
   }
-
-  /// The main action on a screen.
-  func prominentButtonStyle() -> some View {
-    buttonStyle(.glassProminent)
-  }
-
-  /// A secondary action set apart from the text beside it.
-  func secondaryButtonStyle() -> some View {
-    buttonStyle(.glass)
-  }
 }

@@ -161,7 +161,7 @@ struct SettingsView: View {
             }
           }
         }
-        .secondaryButtonStyle()
+        .buttonStyle(.glass)
         .disabled(approveCode.trimmingCharacters(in: .whitespaces).count < 6)
       }
       if store.me?.admin == true {

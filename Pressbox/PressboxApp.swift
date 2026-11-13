@@ -241,7 +241,7 @@ struct LockView: View {
         Image(systemName: "lock.fill").font(.largeTitle)
         Text("pressbox is locked").font(.headline)
         Button("Unlock") { Task { await store.unlock() } }
-          .prominentButtonStyle()
+          .buttonStyle(.glassProminent)
       }
     }
   }

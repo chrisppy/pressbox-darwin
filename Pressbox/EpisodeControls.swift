@@ -118,6 +118,7 @@ struct UpNextButton: View {
       queued ? "Remove from Up Next" : "Add to Up Next",
       systemImage: queued ? "text.badge.checkmark" : "text.badge.plus"
     ) {
+      store.haptic(queued ? .toggle : .added)
       Task {
         if queued {
           await store.dequeue(item)

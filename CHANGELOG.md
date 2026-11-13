@@ -102,6 +102,10 @@ through API v1 (`/api/v1`).
   silently did nothing. Settings now shows a warning under the badge switch,
   with a button to the right page in the Settings app (on Mac, where to find it
   in System Settings). The check runs on every reload and when Settings opens.
+- Haptics on iPhone for what you do by hand: a tick for read or unread and star
+  or unstar (swipes and the article's buttons), a light tap for adding to Up
+  Next, and a success buzz for Mark all as read. Items marked read by scrolling
+  stay quiet.
 
 ## [0.1.0] - 2026-11-07
 

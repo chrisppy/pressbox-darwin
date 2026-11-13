@@ -123,6 +123,7 @@ struct ContentView: View {
       }
     #endif
     .settings(isPresented: $showSettings)
+    .sensoryFeedback(trigger: store.feedback) { _, new in new?.sensory }
     // pressbox://item/123, from the widgets.
     .onOpenURL { url in
       guard let id = WidgetStore.itemID(in: url) else { return }

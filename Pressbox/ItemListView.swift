@@ -22,6 +22,7 @@ struct ItemListView: View {
               item.read ? "Unread" : "Read",
               systemImage: item.read ? "circle.fill" : "circle"
             ) {
+              store.haptic(.toggle)
               Task { await store.setRead(item, !item.read) }
             }
             .tint(Theme.read)
@@ -31,6 +32,7 @@ struct ItemListView: View {
               item.starred ? "Unstar" : "Star",
               systemImage: item.starred ? "star.slash" : "star"
             ) {
+              store.haptic(.toggle)
               Task { await store.setStarred(item, !item.starred) }
             }
             .tint(Theme.star)
@@ -40,6 +42,7 @@ struct ItemListView: View {
                 queued ? "Remove from Up Next" : "Up Next",
                 systemImage: queued ? "text.badge.minus" : "text.badge.plus"
               ) {
+                store.haptic(queued ? .toggle : .added)
                 Task {
                   if queued {
                     await store.dequeue(item)
@@ -149,6 +152,7 @@ struct ItemListView: View {
       markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
     ) {
       Button("Mark \(markAllCount) as Read", role: .destructive) {
+        store.haptic(.done)
         Task { await store.markAllRead() }
       }
     } message: {

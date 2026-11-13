@@ -78,12 +78,14 @@ struct ArticleView: View {
       current.starred ? "Unstar" : "Star",
       systemImage: current.starred ? "star.fill" : "star"
     ) {
+      store.haptic(.toggle)
       Task { await store.setStarred(current, !current.starred) }
     }
     Button(
       current.read ? "Mark unread" : "Mark read",
       systemImage: current.read ? "circle" : "circle.fill"
     ) {
+      store.haptic(.toggle)
       Task { await store.setRead(current, !current.read) }
     }
     if let link = current.link {

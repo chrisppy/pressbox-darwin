@@ -73,6 +73,8 @@ final class Store {
   /// The system shows the badge: notifications are allowed for pressbox and
   /// their Badges switch is on. If not, setting the count does nothing.
   var badgeAllowed = true
+  /// The last action to confirm with a haptic (see `haptic(_:)`).
+  var feedback: Feedback?
   /// Mark items read as they scroll off the top of the list.
   var markReadOnScroll: Bool {
     didSet { UserDefaults.standard.set(markReadOnScroll, forKey: "markReadOnScroll") }

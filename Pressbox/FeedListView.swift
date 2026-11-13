@@ -53,6 +53,17 @@ struct FeedListView: View {
           }
           .badge(feed.unread)
         }
+        // A list with no feeds at all: the rows above stay, so a note here
+        // rather than a full-screen empty state.
+        if store.feeds.isEmpty && !store.isLoading {
+          Text(
+            store.isOffline
+              ? "Feeds show up once the server can be reached."
+              : "No feeds yet. Add some to your pressbox server's config, or import an OPML file there, then refresh."
+          )
+          .font(.callout)
+          .foregroundStyle(.secondary)
+        }
       }
       let archived = store.feeds.filter(\.isArchived)
       if !archived.isEmpty {

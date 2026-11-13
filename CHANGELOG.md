@@ -128,6 +128,10 @@ through API v1 (`/api/v1`).
   starts afresh). On iPhone and iPad, articles and episode pages also reopen
   where they were scrolled to, at any time; the 200 most recent are kept on the
   device.
+- Empty lists say why, and what to do: Starred says how to star items; All
+  caught up offers Show All Items; an empty list offline, or one that failed to
+  load, says so (with Try Again) instead of looking caught up; and a server with
+  no feeds yet says where to add them.
 
 ## [0.1.0] - 2026-11-07
 

@@ -103,13 +103,7 @@ struct ItemListView: View {
     .refreshable { await store.reload() }
     .overlay {
       if store.items.isEmpty && !store.isLoading {
-        if let search = store.search {
-          ContentUnavailableView.search(text: search)
-        } else {
-          ContentUnavailableView(
-            store.unreadOnly ? "All caught up" : "No items",
-            systemImage: "checkmark.circle")
-        }
+        emptyState
       }
     }
     .safeAreaInset(edge: .bottom) {
@@ -183,6 +177,48 @@ extension ItemListView {
       ? "Mark the unread item in \(list) as read?"
       : "Mark all \(markAllCount) unread items in \(list) as read?"
   }
+
+  /// What an empty list says, and what to do about it.
+  @ViewBuilder private var emptyState: some View {
+    let list = store.source.map(store.title(for:)) ?? ""
+    if let search = store.search {
+      ContentUnavailableView.search(text: search)
+    } else if store.isOffline {
+      ContentUnavailableView(
+        "Offline", systemImage: "wifi.slash",
+        description: Text("Nothing in \(list) was saved to read offline."))
+    } else if let message = store.errorMessage {
+      ContentUnavailableView {
+        Label("Couldn't Load \(list)", systemImage: "exclamationmark.triangle")
+      } description: {
+        Text(message)
+      } actions: {
+        Button("Try Again") { Task { await store.reload() } }
+      }
+    } else if store.source == .starred {
+      ContentUnavailableView(
+        "No starred items", systemImage: "star",
+        description: Text(Self.starHint))
+    } else if store.unreadOnly {
+      ContentUnavailableView {
+        Label("All caught up", systemImage: "checkmark.circle")
+      } description: {
+        Text("No unread items in \(list).")
+      } actions: {
+        Button("Show All Items") { Task { await store.setUnreadOnly(false) } }
+      }
+    } else {
+      ContentUnavailableView(
+        "No items", systemImage: "tray",
+        description: Text("Nothing in \(list) yet. New items show up as the server fetches its feeds."))
+    }
+  }
+
+  #if os(macOS)
+    private static let starHint = "Star an item from its toolbar to keep it here."
+  #else
+    private static let starHint = "Swipe left on an item, or use Star on its page, to keep it here."
+  #endif
 
   /// Keys that act on the list when it has the keyboard focus (Mac, or an
   /// iPad with a keyboard). Typing in the search field doesn't reach them.

@@ -37,9 +37,10 @@ just open      # xcodegen, then open Pressbox.xcodeproj
 
 Set your team under Signing & Capabilities (or `DEVELOPMENT_TEAM` in
 `project.yml`), pick an iOS device, a simulator or My Mac, and run it. CI builds
-the app for the iOS simulator and for macOS on every change
-(`.github/workflows/apple.yml`); `just build` does the same locally
-(`just build-ios` or `just build-mac` for one).
+the app for the iOS simulator and for macOS on every change, and runs the unit
+tests (`PressboxTests/`, with Swift Testing) in an iPhone simulator
+(`.github/workflows/apple.yml`); `just build` and `just test` do the same
+locally (`just build-ios` or `just build-mac` for one platform).
 
 ## Using it
 

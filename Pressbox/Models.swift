@@ -86,7 +86,6 @@ struct TranscriptFile: Codable, Hashable {
   let rel: String?
 }
 
-/// Body of `PUT /api/v1/items/{id}/position`.
 /// `GET /api/v1/queue`: the Up Next queue.
 struct Queue: Codable {
   let items: [Item]
@@ -97,6 +96,7 @@ struct QueueOrder: Codable {
   let ids: [Int64]
 }
 
+/// Body of `PUT /api/v1/items/{id}/position`.
 struct Position: Codable {
   let position: Int
 }

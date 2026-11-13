@@ -32,8 +32,11 @@ targets:
       - Shared
     dependencies:
       - target: PressboxWidgets
-    # A shared scheme, so `xcodebuild -scheme Pressbox` works in CI.
-    scheme: {}
+    # A shared scheme, so `xcodebuild -scheme Pressbox` works in CI, and
+    # `xcodebuild test` runs the unit tests.
+    scheme:
+      testTargets:
+        - PressboxTests
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.red-oxide.pressbox
@@ -102,3 +105,16 @@ targets:
       properties:
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+  PressboxTests:
+    type: bundle.unit-test
+    platform: auto
+    # Run in the iOS simulator; the app's logic is the same on Mac.
+    supportedDestinations: [iOS]
+    sources:
+      - PressboxTests
+    dependencies:
+      - target: Pressbox
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.red-oxide.pressbox.tests
+        GENERATE_INFOPLIST_FILE: true

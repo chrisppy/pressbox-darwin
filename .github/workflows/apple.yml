@@ -46,3 +46,30 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | tee build.log
           ! grep -q ': warning: ' build.log || echo "::warning::the build has compiler warnings; see the log"
+
+  test:
+    name: test (iOS Simulator)
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen
+
+      - name: Run the unit tests
+        run: |
+          # Whichever iPhone simulator the runner has.
+          simulator=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          echo "Simulator: $simulator"
+          xcodebuild test \
+            -project Pressbox.xcodeproj \
+            -scheme Pressbox \
+            -destination "id=$simulator" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO

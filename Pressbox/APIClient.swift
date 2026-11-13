@@ -28,7 +28,7 @@ struct APIClient {
   let server: String
   let token: String?
 
-  private static let decoder: JSONDecoder = {
+  static let decoder: JSONDecoder = {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
     return decoder

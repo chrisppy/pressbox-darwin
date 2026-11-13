@@ -26,6 +26,10 @@ build-ios: project
 build-mac: project
     xcodebuild build -project Pressbox.xcodeproj -scheme Pressbox -destination 'generic/platform=macOS' -configuration Debug CODE_SIGNING_ALLOWED=NO
 
+# Run the unit tests in an iPhone simulator (macOS)
+test: project
+    xcodebuild test -project Pressbox.xcodeproj -scheme Pressbox -destination "id=$(xcrun simctl list devices available --json | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')" -configuration Debug CODE_SIGNING_ALLOWED=NO
+
 # Check formatting and licensing
 check:
     nix flake check

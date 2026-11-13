@@ -76,11 +76,11 @@ enum WidgetStore {
     }
   }
 
-  private static func unreadChanged(_ a: WidgetSnapshot, _ b: WidgetSnapshot) -> Bool {
+  static func unreadChanged(_ a: WidgetSnapshot, _ b: WidgetSnapshot) -> Bool {
     a.configured != b.configured || a.unread != b.unread || a.latest != b.latest
   }
 
-  private static func playingChanged(_ a: WidgetSnapshot, _ b: WidgetSnapshot) -> Bool {
+  static func playingChanged(_ a: WidgetSnapshot, _ b: WidgetSnapshot) -> Bool {
     a.configured != b.configured || a.nowPlaying != b.nowPlaying || a.isPlaying != b.isPlaying
       || a.rate != b.rate || a.hasQueue != b.hasQueue || a.upNext != b.upNext
       // Paused somewhere else: the progress bar moves.

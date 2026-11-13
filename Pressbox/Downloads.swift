@@ -264,7 +264,7 @@ final class Downloads {
 
   /// The enclosure to save: the audio (or the video), not a stream (HLS),
   /// which can't be saved as one file.
-  private static func enclosure(of item: Item, video: Bool) -> Enclosure? {
+  static func enclosure(of item: Item, video: Bool) -> Enclosure? {
     guard let media = item.media else { return nil }
     let files = media.enclosures.filter { !isStream($0) }
     if video { return files.first(where: \.isVideo) }
@@ -277,7 +277,7 @@ final class Downloads {
   }
 
   /// AVPlayer tells a local file's format by its extension.
-  private static func fileExtension(of enclosure: Enclosure) -> String {
+  static func fileExtension(of enclosure: Enclosure) -> String {
     let ext = URL(string: enclosure.url)?.pathExtension.lowercased() ?? ""
     if !ext.isEmpty, ext.count <= 4, ext.allSatisfy({ $0.isLetter || $0.isNumber }) { return ext }
     switch enclosure.mime?.lowercased() {
@@ -309,7 +309,7 @@ struct Download: Codable, Hashable {
 
 /// What a download task is for, kept in its `taskDescription` so it survives
 /// the app being closed.
-private struct TaskInfo: Sendable {
+struct TaskInfo: Sendable, Equatable {
   let id: Int64
   let kind: Download.Kind
   let automatic: Bool

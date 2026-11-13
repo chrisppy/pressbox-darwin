@@ -118,6 +118,11 @@ through API v1 (`/api/v1`).
   Shortcuts), and a default speed. Each podcast keeps its own speed: change it
   in the player and that podcast's episodes play at it from then on; set it back
   to the default to forget it. Speeds are kept on this device.
+- Keyboard shortcuts in the item list, on Mac and on an iPad with a keyboard: j
+  and k for the next and previous item, m for read or unread, s to star or
+  unstar, and space to play or pause (or play the selected episode). They work
+  while the list has the focus (click it, or Tab to it), so typing in the search
+  field isn't affected.
 
 ## [0.1.0] - 2026-11-07
 

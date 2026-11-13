@@ -10,7 +10,8 @@ import SwiftUI
 // here: use `.tint` or `Color.accentColor`.
 
 enum Theme {
-  /// base00: screens, lists and the article.
+  /// base00: screens, lists and the article (not sheets: see
+  /// `themedSheet`).
   static let background = Color("Background")
   /// base05: primary text.
   static let text = Color("Text")
@@ -56,6 +57,16 @@ extension View {
     self
       .scrollContentBackground(.hidden)
       .background(Theme.background)
+      .foregroundStyle(Theme.text, Theme.mutedText)
+  }
+
+  /// Birdland text for a sheet, over the sheet's own background: Liquid
+  /// Glass at partial height, letting the screen beneath show around it,
+  /// and more opaque at full height. A background of our own would hide
+  /// that.
+  func themedSheet() -> some View {
+    self
+      .scrollContentBackground(.hidden)
       .foregroundStyle(Theme.text, Theme.mutedText)
   }
 }

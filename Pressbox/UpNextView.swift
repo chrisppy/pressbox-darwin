@@ -41,7 +41,7 @@ struct UpNextView: View {
         }
       }
       .listStyle(.plain)
-      .themedScreen()
+      .themedSheet()
       .overlay {
         if store.queue.isEmpty {
           ContentUnavailableView(

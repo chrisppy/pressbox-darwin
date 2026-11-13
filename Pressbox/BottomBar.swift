@@ -30,14 +30,17 @@ extension EnvironmentValues {
 }
 
 extension View {
-  /// The screen's controls, together in one group centered in the bottom
-  /// toolbar: Back (and Home) first when columns are stacked, then
-  /// `buttons`. The group is one piece of glass, and with `search` a search
-  /// button sits beside it, opening the field in the bar.
+  /// The screen's controls, centered in the bottom toolbar: Back (and
+  /// Home) when columns are stacked, then `buttons`. Each is its own piece
+  /// of glass, since the HIG groups toolbar items by what they do, and with
+  /// `search` a search button sits beside them, opening the field in the
+  /// bar. Pass `showsButtons: false` when `buttons` would be empty, so no
+  /// empty group is left in the bar.
   func bottomControls<Buttons: View>(
-    search: Bool = false, @ViewBuilder _ buttons: () -> Buttons
+    search: Bool = false, showsButtons: Bool = true,
+    @ViewBuilder _ buttons: () -> Buttons
   ) -> some View {
-    modifier(BottomControls(search: search, buttons: buttons()))
+    modifier(BottomControls(search: search, showsButtons: showsButtons, buttons: buttons()))
   }
 }
 
@@ -45,6 +48,7 @@ private struct BottomControls<Buttons: View>: ViewModifier {
   @Environment(\.navigation) private var navigation
   @Environment(\.showsMiniPlayer) private var showsMiniPlayer
   let search: Bool
+  let showsButtons: Bool
   let buttons: Buttons
 
   @ViewBuilder func body(content: Content) -> some View {
@@ -53,7 +57,9 @@ private struct BottomControls<Buttons: View>: ViewModifier {
       // and `.searchable` puts its field in the toolbar by itself.
       content
         .toolbar {
-          ToolbarItemGroup(placement: .primaryAction) { buttons }
+          if showsButtons {
+            ToolbarItemGroup(placement: .primaryAction) { buttons }
+          }
         }
     #else
       iOSBody(content: content)
@@ -69,7 +75,15 @@ private struct BottomControls<Buttons: View>: ViewModifier {
       screen
         .toolbar {
           ToolbarSpacer(.flexible, placement: .bottomBar)
-          ToolbarItemGroup(placement: .bottomBar) { allButtons }
+          if navigation != nil {
+            ToolbarItemGroup(placement: .bottomBar) { navigationButtons }
+          }
+          if navigation != nil && showsButtons {
+            ToolbarSpacer(.fixed, placement: .bottomBar)
+          }
+          if showsButtons {
+            ToolbarItemGroup(placement: .bottomBar) { buttons }
+          }
           if search {
             DefaultToolbarItem(kind: .search, placement: .bottomBar)
           }
@@ -78,11 +92,6 @@ private struct BottomControls<Buttons: View>: ViewModifier {
         .searchToolbarBehavior(.minimize)
     }
   #endif
-
-  @ViewBuilder private var allButtons: some View {
-    navigationButtons
-    buttons
-  }
 
   @ViewBuilder private var navigationButtons: some View {
     if let navigation {

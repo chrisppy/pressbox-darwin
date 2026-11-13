@@ -142,7 +142,9 @@ struct ItemListView: View {
       }
       .animation(.default, value: store.undoable?.id)
     }
-    .bottomControls(search: true) {
+    // The Unread only toggle everywhere but Starred, and the News and
+    // Podcasts toggles where they apply (below).
+    .bottomControls(search: true, showsButtons: store.source != .starred || store.canFilterKinds) {
       // On: unread items only; off: all of them. Starred shows every starred
       // item either way, so it has none.
       if store.source != .starred {
@@ -171,7 +173,7 @@ struct ItemListView: View {
     // a few seconds after.
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
-        Button("Mark all as read", systemImage: "checkmark.circle") { confirmMarkAll = true }
+        Button("Mark all as read", systemImage: "checkmark") { confirmMarkAll = true }
           .disabled(markAllCount == 0)
           // On the button, so the action sheet comes from it.
           .confirmationDialog(

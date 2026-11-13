@@ -136,7 +136,7 @@ struct NowPlayingView: View {
       }
       .padding(24)
       .frame(maxHeight: .infinity, alignment: .top)
-      .themedScreen()
+      .themedSheet()
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") { dismiss() }

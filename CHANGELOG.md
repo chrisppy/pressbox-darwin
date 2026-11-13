@@ -19,6 +19,10 @@ through API v1 (`/api/v1`).
   own buttons, the undo and status banners and the mini player get the scroll
   edge effect, and Reload and Refresh Feeds on Server are in the iPad's menu
   bar.
+- Up Next, the player and Settings show the system's glass sheet rather than the
+  Birdland background, so a half-height sheet lets the screen beneath show
+  around it. The bottom toolbar puts Back and Feeds in one glass group and the
+  filters in another, and Mark all as read is a plain checkmark.
 - The logic with no screens is in `Core/`, which also builds as a Swift package:
   `just test` runs its unit tests with `swift test` on Linux or a Mac, and CI
   runs them on Linux too. `just test-app` runs all the tests in the iOS

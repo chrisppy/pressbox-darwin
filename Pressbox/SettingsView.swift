@@ -70,7 +70,7 @@ struct SettingsView: View {
         }
         aboutSection
       }
-      .themedScreen()
+      .themedSheet()
       .navigationTitle("Settings")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

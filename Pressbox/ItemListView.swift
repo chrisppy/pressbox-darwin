@@ -137,13 +137,13 @@ struct ItemListView: View {
             get: { store.unreadOnly },
             set: { value in Task { await store.setUnreadOnly(value) } })
         ) {
-          // A filter, as in Mail: filled while it hides read items. The
-          // dot stays for marking an item read or unread.
+          // The HIG's standard Filter symbol. The button style shows when
+          // it is on, as with the News and Podcasts toggles, so the symbol
+          // doesn't change; the dot stays for marking an item read or
+          // unread.
           Label(
             store.unreadOnly ? "Unread only" : "All items",
-            systemImage: store.unreadOnly
-              ? "line.3.horizontal.decrease.circle.fill"
-              : "line.3.horizontal.decrease.circle")
+            systemImage: "line.3.horizontal.decrease")
         }
         .toggleStyle(.button)
       }

@@ -42,7 +42,7 @@ struct ArticleView: View {
           UpNextButton(item: current)
         }
         DownloadButton(item: current)
-        Menu("More", systemImage: "ellipsis.circle") {
+        Menu("More", systemImage: "ellipsis") {
           // The mini player is off an episode's page; this opens the full one.
           if store.playback.item != nil {
             Button("Now Playing", systemImage: "waveform") { showPlayer = true }

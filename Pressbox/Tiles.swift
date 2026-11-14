@@ -69,7 +69,9 @@ struct TileArtwork: View {
   }
 }
 
-/// A count in the corner of a tile, as `.badge` gives a list row.
+/// A count in the corner of a tile, as `.badge` gives a list row: the
+/// accent through glass, as a selected control in the bottom bar has it,
+/// since the accent painted flat reads as red.
 struct TileBadge: View {
   let count: Int
 
@@ -80,7 +82,7 @@ struct TileBadge: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(Color.accentColor, in: .capsule)
+        .glassEffect(.regular.tint(.accentColor), in: .capsule)
         .padding(6)
     }
   }

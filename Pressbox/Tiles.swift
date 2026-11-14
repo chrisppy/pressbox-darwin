@@ -64,8 +64,8 @@ struct TileArtwork: View {
   }
 
   /// The symbol large in the middle, as the tile's picture, and the text
-  /// under it, in white on the accent through glass, as the bottom bar's
-  /// selected controls have it, with the same shade as on artwork.
+  /// under it, in white on orange through glass (lighter in dark mode), with
+  /// the same shade as on artwork.
   private var plainTile: some View {
     VStack(spacing: 0) {
       Spacer(minLength: 6)
@@ -79,7 +79,7 @@ struct TileArtwork: View {
     .foregroundStyle(.white)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .glassEffect(
-      .regular.tint(.accentColor), in: .rect(cornerRadius: Tiles.cornerRadius))
+      .regular.tint(Theme.tile), in: .rect(cornerRadius: Tiles.cornerRadius))
   }
 
   private func text(titleFont: Font, lines: Int, dot: Color) -> some View {

@@ -25,6 +25,9 @@ enum Theme {
   static let read = Color("CamdenGreen")
   /// base0D: links in articles.
   static let link = Color("WarehouseOrange")
+  /// Tiles without artwork: AccentColor in light mode, and in dark mode
+  /// #FE996B, which isn't a Birdland slot.
+  static let tile = Color("TileOrange")
 
   /// CSS custom properties for the article page, light and dark: `--text`,
   /// `--muted` and `--link`. The page background stays transparent so the

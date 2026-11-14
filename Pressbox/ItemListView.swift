@@ -150,7 +150,7 @@ struct ItemListView: View {
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Menu("More", systemImage: "ellipsis") {
-          Button("Mark All as Read", systemImage: "checkmark") { confirmMarkAll = true }
+          Button("Mark All as Read") { confirmMarkAll = true }
             .disabled(markAllCount == 0)
         }
         // On the menu, so the action sheet comes from it: the menu has

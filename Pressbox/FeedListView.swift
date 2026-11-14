@@ -132,7 +132,8 @@ private struct SourceTile: View {
 
   init(feed: Feed, unread: Int) {
     title = feed.title
-    symbol = feed.hasEpisodes && !feed.hasNews ? "waveform" : "newspaper"
+    // The News and Podcasts toggles' symbols.
+    symbol = feed.hasEpisodes && !feed.hasNews ? "headphones" : "newspaper"
     image = URL(artwork: feed.image)
     self.unread = unread
     error = feed.lastError

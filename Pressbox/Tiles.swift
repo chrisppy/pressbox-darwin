@@ -21,7 +21,7 @@ enum Tiles {
 
 /// A square tile with its text on it: the artwork with the text over a
 /// shade at the bottom, or, with no artwork (until it loads, or if it
-/// can't), a plain tile with a symbol and the text.
+/// can't), a plain tile with a large symbol over the text.
 struct TileArtwork: View {
   let url: URL?
   let symbol: String
@@ -66,17 +66,19 @@ struct TileArtwork: View {
           startPoint: .top, endPoint: .bottom))
   }
 
+  /// The symbol large in the middle, as the tile's picture, and the text
+  /// under it.
   private var plainTile: some View {
-    VStack(alignment: .leading, spacing: 0) {
+    VStack(spacing: 0) {
+      Spacer(minLength: 6)
       Image(systemName: symbol)
-        .font(.title3)
+        .font(.system(size: 34))
         .foregroundStyle(tint)
-        .padding([.top, .horizontal], 10)
         .accessibilityHidden(true)
-      Spacer(minLength: 0)
-      text(titleFont: .headline, lines: 4)
+      Spacer(minLength: 4)
+      text(titleFont: .subheadline, lines: 2)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(.quaternary)
   }
 

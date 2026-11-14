@@ -368,7 +368,7 @@ struct ItemTile: View {
 
   var body: some View {
     TileArtwork(
-      url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text", title: item.title,
+      url: artwork, symbol: item.isEpisode ? "headphones" : "newspaper", title: item.title,
       detail: Text(verbatim: "\(feedTitle) · ")
         + Text(item.publishedDate, format: .relative(presentation: .numeric)),
       unread: !item.read, emphasized: !item.read

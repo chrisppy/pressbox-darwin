@@ -20,7 +20,8 @@ The app is versioned on its own; it talks to pressbox servers through API v1
   shows its artwork and unread count; an item's shows the episode's artwork
   (else the feed's), with playing, downloaded and starred on it. The title (and
   an item's feed and age) is on the tile, over a shade at the foot of the
-  artwork, or on a plain tile with a symbol when there is none. Touch and hold
+  artwork, or under a large newspaper or headphones (the News and Podcasts
+  symbols) when there is none. Touch and hold
   (or right-click on Mac) an item for Mark as Read, Star and Up Next, which were
   its swipes.
 - Mark All as Read is in a More (⋯) menu at the top of an item list, rather than

@@ -18,7 +18,9 @@ The app is versioned on its own; it talks to pressbox servers through API v1
 - The feed list and the item lists are grids of tiles rather than lists: as many
   columns as fit, two or three on iPhone and more on iPad and Mac. A feed's tile
   shows its artwork and unread count; an item's shows the episode's artwork
-  (else the feed's), with playing, downloaded and starred on it. Touch and hold
+  (else the feed's), with playing, downloaded and starred on it. The title (and
+  an item's feed and age) is on the tile, over a shade at the foot of the
+  artwork, or on a plain tile with a symbol when there is none. Touch and hold
   (or right-click on Mac) an item for Mark as Read, Star and Up Next, which were
   its swipes.
 - Mark All as Read is in a More (⋯) menu at the top of an item list, rather than

@@ -346,9 +346,9 @@ struct ItemRow: View {
   }
 }
 
-/// An item in the grid: its artwork (the episode's, else the feed's), the
-/// feed and how long ago, then the title. Unread items have the dot and a
-/// bolder title.
+/// An item in the grid: its artwork (the episode's, else the feed's), with
+/// the feed, how long ago and the title on it. Unread items have the dot
+/// and a bolder title; read ones are dimmed.
 struct ItemTile: View {
   @Environment(Store.self) private var store
   let item: Item
@@ -367,40 +367,20 @@ struct ItemTile: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      TileArtwork(
-        url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text", title: item.title
-      )
-      .opacity(item.read ? 0.6 : 1)
-      .overlay(alignment: .topTrailing) { status }
-      HStack(spacing: 6) {
-        Circle()
-          .fill(item.read ? .clear : Color.accentColor)
-          .frame(width: 8, height: 8)
-          .accessibilityLabel(item.read ? "" : "Unread")
-        Text(feedTitle)
-          .lineLimit(1)
-        Spacer(minLength: 4)
-        Text(item.publishedDate, format: .relative(presentation: .numeric))
-          .lineLimit(1)
-      }
-      .font(.caption)
-      .foregroundStyle(.secondary)
-      // The artwork's own tile has the title when there's no artwork.
-      if artwork != nil {
-        Text(item.title)
-          .font(.subheadline.weight(item.read ? .regular : .semibold))
-          .foregroundStyle(item.read ? .secondary : .primary)
-          .lineLimit(3, reservesSpace: true)
-          .multilineTextAlignment(.leading)
-      }
-    }
+    TileArtwork(
+      url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text", title: item.title,
+      detail: Text(verbatim: "\(feedTitle) · ")
+        + Text(item.publishedDate, format: .relative(presentation: .numeric)),
+      unread: !item.read, emphasized: !item.read
+    )
+    .opacity(item.read ? 0.6 : 1)
+    .overlay(alignment: .topTrailing) { status }
     .contentShape(.rect)
     .accessibilityElement(children: .combine)
   }
 
-  /// Playing, downloaded and starred, on glass in the artwork's top corner,
-  /// clear of a title in the tile.
+  /// Playing, downloaded and starred, on glass in the tile's top corner,
+  /// clear of its text at the bottom.
   @ViewBuilder private var status: some View {
     let download = Downloads.shared.state(item.id)
     let downloaded: Bool = {

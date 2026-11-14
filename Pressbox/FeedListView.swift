@@ -151,7 +151,7 @@ private struct SourceTile: View {
   }
 }
 
-/// Artwork with a count in its corner, and the title under it.
+/// The tile, with a count in its corner and the title on it.
 private struct TileLabel: View {
   let title: String
   let symbol: String
@@ -161,27 +161,20 @@ private struct TileLabel: View {
   var error: String?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      TileArtwork(url: image, symbol: symbol, tint: tint, title: title)
-        .overlay(alignment: .topTrailing) { TileBadge(count: count) }
-        .overlay(alignment: .bottomTrailing) {
-          if let error {
-            Image(systemName: "exclamationmark.triangle.fill")
-              .foregroundStyle(Theme.error)
-              .padding(8)
-              .accessibilityLabel("Last fetch failed: \(error)")
-          }
+    TileArtwork(url: image, symbol: symbol, tint: tint, title: title)
+      .overlay(alignment: .topTrailing) { TileBadge(count: count) }
+      .overlay(alignment: .topLeading) {
+        if let error {
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(Theme.error)
+            .padding(6)
+            .background(.regularMaterial, in: .circle)
+            .padding(6)
+            .accessibilityLabel("Last fetch failed: \(error)")
         }
-      // The artwork's own tile has the title when there's no artwork.
-      if image != nil {
-        Text(title)
-          .font(.subheadline)
-          .lineLimit(2, reservesSpace: true)
-          .multilineTextAlignment(.leading)
       }
-    }
-    .contentShape(.rect)
-    .accessibilityElement(children: .combine)
-    .accessibilityValue(count > 0 ? "\(count) unread" : "")
+      .contentShape(.rect)
+      .accessibilityElement(children: .combine)
+      .accessibilityValue(count > 0 ? "\(count) unread" : "")
   }
 }

@@ -9,8 +9,6 @@ import SwiftUI
 
 enum Tiles {
   /// Feeds, tags, All and Starred.
-  /// Top-aligned: a tile with its title inside is shorter than one with the
-  /// title under its artwork.
   static let sources = [
     GridItem(.adaptive(minimum: 104, maximum: 180), spacing: 12, alignment: .top)
   ]
@@ -22,13 +20,20 @@ enum Tiles {
   static let cornerRadius: CGFloat = 14
 }
 
-/// Square artwork from a URL. With none, or until it loads (or if it
-/// can't), the tile shows the title itself, under a symbol.
+/// A square tile with its text on it: the artwork with the text over a
+/// shade at the bottom, or, with no artwork (until it loads, or if it
+/// can't), a plain tile with a symbol and the text.
 struct TileArtwork: View {
   let url: URL?
   let symbol: String
   var tint: Color = .secondary
   let title: String
+  /// A line above the title: an item's feed and age.
+  var detail: Text?
+  /// The dot of an unread item, beside the detail.
+  var unread = false
+  /// A bolder title, for unread items.
+  var emphasized = false
 
   var body: some View {
     Color.clear
@@ -38,34 +43,67 @@ struct TileArtwork: View {
           AsyncImage(url: url) { phase in
             if let image = phase.image {
               image.resizable().scaledToFill().accessibilityHidden(true)
+                .overlay(alignment: .bottom) { shadedText }
             } else {
-              titleTile
+              plainTile
             }
           }
         } else {
-          titleTile
+          plainTile
         }
       }
       .clipShape(RoundedRectangle(cornerRadius: Tiles.cornerRadius))
   }
 
-  private var titleTile: some View {
-    VStack(alignment: .leading, spacing: 4) {
+  /// White text over the artwork, on a shade that darkens toward the
+  /// bottom so it reads on any picture.
+  private var shadedText: some View {
+    text(titleFont: .subheadline, lines: 3)
+      .foregroundStyle(.white)
+      .padding(.top, 24)
+      .background(
+        LinearGradient(
+          colors: [.clear, .black.opacity(0.55), .black.opacity(0.8)],
+          startPoint: .top, endPoint: .bottom))
+  }
+
+  private var plainTile: some View {
+    VStack(alignment: .leading, spacing: 0) {
       Image(systemName: symbol)
         .font(.title3)
         .foregroundStyle(tint)
+        .padding([.top, .horizontal], 10)
         .accessibilityHidden(true)
       Spacer(minLength: 0)
+      text(titleFont: .headline, lines: 4)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    .background(.quaternary)
+  }
+
+  private func text(titleFont: Font, lines: Int) -> some View {
+    VStack(alignment: .leading, spacing: 2) {
+      if let detail {
+        HStack(spacing: 4) {
+          if unread {
+            Circle()
+              .fill(Color.accentColor)
+              .frame(width: 7, height: 7)
+              .accessibilityLabel("Unread")
+          }
+          detail.lineLimit(1)
+        }
+        .font(.caption2)
+        .opacity(0.85)
+      }
       Text(title)
-        .font(.headline)
-        .foregroundStyle(.primary)
-        .lineLimit(4)
+        .font(titleFont.weight(emphasized ? .bold : .semibold))
+        .lineLimit(lines)
         .minimumScaleFactor(0.75)
         .multilineTextAlignment(.leading)
     }
     .padding(10)
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-    .background(.quaternary)
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 

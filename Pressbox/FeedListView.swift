@@ -15,7 +15,7 @@ struct FeedListView: View {
           SourceTile(
             title: store.title(for: .all), symbol: "tray.full",
             unread: store.unread(in: .all), source: .all)
-          SourceTile(title: "Starred", symbol: "star", tint: Theme.star, source: .starred)
+          SourceTile(title: "Starred", symbol: "star.fill", tint: Theme.star, source: .starred)
           if store.hasQueue {
             Button {
               showUpNext = true

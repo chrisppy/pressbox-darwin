@@ -4,17 +4,16 @@
 import SwiftUI
 
 // Tiles for the feed list and the item lists: a grid that fits as many
-// columns as the width allows, two or three on iPhone and more on iPad and
-// Mac.
+// columns as the width allows: three on iPhone and more on iPad and Mac.
 
 enum Tiles {
   /// Feeds, tags, All and Starred.
   static let sources = [
     GridItem(.adaptive(minimum: 104, maximum: 180), spacing: 12, alignment: .top)
   ]
-  /// Articles and episodes.
+  /// Articles and episodes: three across on every iPhone, as the feeds are.
   static let items = [
-    GridItem(.adaptive(minimum: 160, maximum: 280), spacing: 12, alignment: .top)
+    GridItem(.adaptive(minimum: 104, maximum: 220), spacing: 12, alignment: .top)
   ]
   static let spacing: CGFloat = 12
   static let cornerRadius: CGFloat = 14

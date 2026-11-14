@@ -21,7 +21,7 @@ The app is versioned on its own; it talks to pressbox servers through API v1
   feed's), with playing, downloaded and starred on it. The title (and an item's
   feed and age) is on the tile, over a shade at the foot of the artwork, or in
   white under a large newspaper or headphones (the News and Podcasts symbols) on
-  an orange tile when there is none. Touch and hold (or right-click on Mac) an
+  an orange tile, over the same shade, when there is none. Touch and hold (or right-click on Mac) an
   item for Mark as Read, Star and Up Next, which were its swipes.
 - Mark All as Read is in a More (⋯) menu at the top of an item list, rather than
   a button of its own, so it's harder to tap by mistake. It still asks first.

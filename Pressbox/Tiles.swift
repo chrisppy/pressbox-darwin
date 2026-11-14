@@ -56,21 +56,16 @@ struct TileArtwork: View {
       .clipShape(RoundedRectangle(cornerRadius: Tiles.cornerRadius))
   }
 
-  /// White text over the artwork, on a shade that darkens toward the
-  /// bottom so it reads on any picture.
+  /// White text over the artwork, on the shade so it reads on any picture.
   private var shadedText: some View {
     text(titleFont: .subheadline, lines: 3, dot: .accentColor)
       .foregroundStyle(.white)
-      .padding(.top, 24)
-      .background(
-        LinearGradient(
-          colors: [.clear, .black.opacity(0.55), .black.opacity(0.8)],
-          startPoint: .top, endPoint: .bottom))
+      .shaded()
   }
 
   /// The symbol large in the middle, as the tile's picture, and the text
   /// under it, in white on the accent through glass, as the bottom bar's
-  /// selected controls have it.
+  /// selected controls have it, with the same shade as on artwork.
   private var plainTile: some View {
     VStack(spacing: 0) {
       Spacer(minLength: 6)
@@ -79,6 +74,7 @@ struct TileArtwork: View {
         .accessibilityHidden(true)
       Spacer(minLength: 4)
       text(titleFont: .subheadline, lines: 2, dot: .white)
+        .shaded()
     }
     .foregroundStyle(.white)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -141,6 +137,20 @@ struct TileBadge: View {
 }
 
 extension View {
+  /// A shade behind a tile's text that darkens toward the bottom, starting
+  /// a little above the text so it fades in rather than ending in a line.
+  /// The lead-in is drawn past the text's top, so it takes no room from
+  /// what is above (the symbol on a plain tile).
+  fileprivate func shaded() -> some View {
+    background {
+      LinearGradient(
+        colors: [.clear, .black.opacity(0.55), .black.opacity(0.8)],
+        startPoint: .top, endPoint: .bottom
+      )
+      .padding(.top, -24)
+    }
+  }
+
   /// The ring round a selected tile, where a list would highlight the row.
   func tileSelected(_ selected: Bool) -> some View {
     overlay {

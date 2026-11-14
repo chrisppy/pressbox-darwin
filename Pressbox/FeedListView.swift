@@ -133,7 +133,7 @@ private struct SourceTile: View {
   init(feed: Feed, unread: Int) {
     title = feed.title
     symbol = feed.hasEpisodes && !feed.hasNews ? "waveform" : "newspaper"
-    image = feed.image.flatMap(URL.init(string:))
+    image = URL(artwork: feed.image)
     self.unread = unread
     error = feed.lastError
     source = .feed(feed.id)

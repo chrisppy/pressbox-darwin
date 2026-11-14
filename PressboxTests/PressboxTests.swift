@@ -268,3 +268,22 @@ struct FormatTimeTests {
     #expect(formatTime(seconds) == expected)
   }
 }
+
+struct ArtworkURLTests {
+  @Test func asksForHTTPSOffTheLocalNetwork() {
+    let https = "https://cdn.example/a.png"
+    #expect(URL(artwork: "http://cdn.example/a.png")?.absoluteString == https)
+    #expect(URL(artwork: "http://cdn.example:80/a.png")?.absoluteString == https)
+    #expect(URL(artwork: https)?.absoluteString == https)
+  }
+
+  @Test func leavesLocalAddressesAlone() {
+    for local in ["http://nas.local/a.png", "http://nas/a.png", "http://192.168.1.2:8080/a.png"] {
+      #expect(URL(artwork: local)?.absoluteString == local)
+    }
+  }
+
+  @Test func nothingFromNothing() {
+    #expect(URL(artwork: nil) == nil)
+  }
+}

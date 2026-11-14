@@ -360,7 +360,7 @@ struct ItemTile: View {
 
   private var artwork: URL? {
     let image = item.media?.image ?? store.feeds.first { $0.id == item.feedId }?.image
-    return image.flatMap(URL.init(string:))
+    return URL(artwork: image)
   }
 
   var body: some View {

@@ -442,7 +442,7 @@ final class Playback {
   /// The episode's (or else the feed's) artwork, for the Lock Screen.
   private func loadArtwork(for item: Item) {
     let image = item.media?.image ?? store?.feeds.first { $0.id == item.feedId }?.image
-    guard let image, let url = URL(string: image) else { return }
+    guard let url = URL(artwork: image) else { return }
     Task {
       guard let response = try? await URLSession.shared.data(from: url),
         let picture = PlatformImage(data: response.0), self.item?.id == item.id

@@ -7,15 +7,18 @@ import SwiftUI
 // columns as the width allows: three on iPhone and more on iPad and Mac.
 
 enum Tiles {
-  /// Feeds, tags, All and Starred.
+  /// Between tiles, across and down.
+  static let spacing: CGFloat = 16
+  /// Feeds, tags, All and Starred. At least 100 points, so three fit across
+  /// even the narrowest iPhone (343 points inside the margins) with the
+  /// spacing between them.
   static let sources = [
-    GridItem(.adaptive(minimum: 104, maximum: 180), spacing: 12, alignment: .top)
+    GridItem(.adaptive(minimum: 100, maximum: 180), spacing: spacing, alignment: .top)
   ]
   /// Articles and episodes: three across on every iPhone, as the feeds are.
   static let items = [
-    GridItem(.adaptive(minimum: 104, maximum: 220), spacing: 12, alignment: .top)
+    GridItem(.adaptive(minimum: 100, maximum: 220), spacing: spacing, alignment: .top)
   ]
-  static let spacing: CGFloat = 12
   static let cornerRadius: CGFloat = 14
 }
 

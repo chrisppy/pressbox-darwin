@@ -16,7 +16,7 @@ struct ItemListView: View {
   var body: some View {
     ScrollViewReader { proxy in
       ScrollView {
-        LazyVGrid(columns: Tiles.items, spacing: Tiles.spacing + 4) {
+        LazyVGrid(columns: Tiles.items, spacing: Tiles.spacing) {
           ForEach(store.items) { item in
             Button {
               selection = item.id

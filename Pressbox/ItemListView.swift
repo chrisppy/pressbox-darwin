@@ -15,47 +15,18 @@ struct ItemListView: View {
 
   var body: some View {
     ScrollViewReader { proxy in
-      List(selection: $selection) {
-        ForEach(store.items) { item in
-          ItemRow(item: item, feedTitle: store.feedTitle(item.feedId))
-            .swipeActions(edge: .leading) {
-              Button(
-                item.read ? "Unread" : "Read",
-                systemImage: item.read ? "circle.fill" : "circle"
-              ) {
-                store.haptic(.toggle)
-                Task { await store.setRead(item, !item.read) }
-              }
-              .tint(Theme.read)
+      ScrollView {
+        LazyVGrid(columns: Tiles.items, spacing: Tiles.spacing + 4) {
+          ForEach(store.items) { item in
+            Button {
+              selection = item.id
+            } label: {
+              ItemTile(item: item, feedTitle: store.feedTitle(item.feedId))
             }
-            .swipeActions(edge: .trailing) {
-              Button(
-                item.starred ? "Unstar" : "Star",
-                systemImage: item.starred ? "star.slash" : "star"
-              ) {
-                store.haptic(.toggle)
-                Task { await store.setStarred(item, !item.starred) }
-              }
-              .tint(Theme.star)
-              if item.isEpisode && store.hasQueue {
-                let queued = store.isQueued(item)
-                Button(
-                  queued ? "Remove from Up Next" : "Up Next",
-                  systemImage: queued ? "text.badge.minus" : "text.badge.plus"
-                ) {
-                  store.haptic(queued ? .toggle : .added)
-                  Task {
-                    if queued {
-                      await store.dequeue(item)
-                    } else {
-                      await store.enqueue(item)
-                    }
-                  }
-                }
-                .tint(Theme.upNext)
-              }
-            }
-            // The swipe actions first, as the HIG asks, then Up Next.
+            .buttonStyle(.plain)
+            .tileSelected(selection == item.id)
+            .id(item.id)
+            // What a list's swipes did, then Up Next.
             .contextMenu {
               Button(
                 item.read ? "Mark as Unread" : "Mark as Read",
@@ -92,13 +63,18 @@ struct ItemListView: View {
               visible.remove(item.id)
               scrolledAway(item)
             }
+          }
         }
+        .padding()
       }
+      // So j, k and the rest reach it on Mac, and on iPad with a keyboard, as
+      // they did a list.
+      .focusable()
+      .focusEffectDisabled()
       .onKeyPress(characters: Self.shortcutKeys, phases: .down) { press in
         shortcut(press, proxy: proxy)
       }
     }
-    .listStyle(.plain)
     .themedScreen()
     .onScrollPhaseChange { _, phase in isScrolling = phase.isScrolling }
     .navigationTitle(store.source.map(store.title(for:)) ?? "")
@@ -242,7 +218,8 @@ extension ItemListView {
   #if os(macOS)
     private static let starHint = "Star an item from its toolbar to keep it here."
   #else
-    private static let starHint = "Swipe left on an item, or use Star on its page, to keep it here."
+    private static let starHint =
+      "Touch and hold an item and choose Star, or use Star on its page, to keep it here."
   #endif
 
   /// Keys that act on the list when it has the keyboard focus (Mac, or an
@@ -284,8 +261,9 @@ extension ItemListView {
   }
 
   /// Marks an item read if it left the screen off the top: the user is
-  /// scrolling and rows below it are still showing. Rows leaving because the
-  /// list itself goes away (opening an article) happen while not scrolling.
+  /// scrolling and tiles after it are still showing. Tiles leaving because
+  /// the list itself goes away (opening an article) happen while not
+  /// scrolling.
   private func scrolledAway(_ item: Item) {
     guard store.markReadOnScroll, isScrolling, !item.read, store.search == nil,
       let index = store.items.firstIndex(where: { $0.id == item.id })
@@ -362,5 +340,89 @@ struct ItemRow: View {
         .lineLimit(3)
     }
     .padding(.vertical, 2)
+  }
+}
+
+/// An item in the grid: its artwork (the episode's, else the feed's), the
+/// feed and how long ago, then the title. Unread items have the dot and a
+/// bolder title.
+struct ItemTile: View {
+  @Environment(Store.self) private var store
+  let item: Item
+  let feedTitle: String
+
+  /// Playing, started, or an episode not started yet.
+  private var episodeSymbol: String? {
+    guard item.isEpisode else { return nil }
+    if store.playback.isCurrent(item) { return "speaker.wave.2.fill" }
+    return item.resumeAt > 0 ? "circle.lefthalf.filled" : "waveform"
+  }
+
+  private var artwork: URL? {
+    let image = item.media?.image ?? store.feeds.first { $0.id == item.feedId }?.image
+    return image.flatMap(URL.init(string:))
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      TileArtwork(url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text")
+        .opacity(item.read ? 0.6 : 1)
+        .overlay(alignment: .bottomLeading) { status }
+      HStack(spacing: 6) {
+        Circle()
+          .fill(item.read ? .clear : Color.accentColor)
+          .frame(width: 8, height: 8)
+          .accessibilityLabel(item.read ? "" : "Unread")
+        Text(feedTitle)
+          .lineLimit(1)
+        Spacer(minLength: 4)
+        Text(item.publishedDate, format: .relative(presentation: .numeric))
+          .lineLimit(1)
+      }
+      .font(.caption)
+      .foregroundStyle(.secondary)
+      Text(item.title)
+        .font(.subheadline.weight(item.read ? .regular : .semibold))
+        .foregroundStyle(item.read ? .secondary : .primary)
+        .lineLimit(3, reservesSpace: true)
+        .multilineTextAlignment(.leading)
+    }
+    .contentShape(.rect)
+    .accessibilityElement(children: .combine)
+  }
+
+  /// Playing, downloaded and starred, on glass over the artwork's corner.
+  @ViewBuilder private var status: some View {
+    let download = Downloads.shared.state(item.id)
+    let downloaded: Bool = {
+      switch download {
+      case .saved, .downloading: true
+      default: false
+      }
+    }()
+    if episodeSymbol != nil || downloaded || item.starred {
+      HStack(spacing: 6) {
+        if let episodeSymbol {
+          Image(systemName: episodeSymbol).foregroundStyle(Color.accentColor)
+        }
+        switch download {
+        case .saved:
+          Image(systemName: "arrow.down.circle.fill").accessibilityLabel("Downloaded")
+        case .downloading:
+          Image(systemName: "arrow.down.circle.dotted").accessibilityLabel("Downloading")
+        default:
+          EmptyView()
+        }
+        if item.starred {
+          Image(systemName: "star.fill").foregroundStyle(Theme.star)
+            .accessibilityLabel("Starred")
+        }
+      }
+      .font(.caption)
+      .padding(.horizontal, 8)
+      .padding(.vertical, 5)
+      .glassEffect(.regular, in: .capsule)
+      .padding(6)
+    }
   }
 }

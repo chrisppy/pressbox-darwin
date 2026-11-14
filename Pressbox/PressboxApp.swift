@@ -67,6 +67,11 @@ struct ContentView: View {
   /// app switcher discards these, and it starts afresh.
   @SceneStorage("source") private var savedSource = ""
   @SceneStorage("selectedItem") private var savedItem = 0
+  /// The column showing when the split view is stacked. The feed and item
+  /// lists are grids of tiles, which don't push and pop the stack by
+  /// themselves as a list's selection does, so it follows the selection,
+  /// and going back (Back, or swiping from the edge) clears it.
+  @State private var compactColumn: NavigationSplitViewColumn = .sidebar
 
   #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -80,13 +85,19 @@ struct ContentView: View {
     private let stacked = false
   #endif
 
+  /// The deepest column with something selected to show.
+  private var selectedColumn: NavigationSplitViewColumn {
+    if selectedItem != nil { return .detail }
+    return store.source == nil ? .sidebar : .content
+  }
+
   /// The article column shows an episode.
   private var episodeOpen: Bool {
     selectedItem.flatMap { store.item($0) }?.isEpisode ?? false
   }
 
   var body: some View {
-    NavigationSplitView {
+    NavigationSplitView(preferredCompactColumn: $compactColumn) {
       FeedListView(showSettings: $showSettings)
         .environment(\.showsMiniPlayer, stacked)
     } content: {
@@ -150,6 +161,13 @@ struct ContentView: View {
       }
     }
     .onChange(of: selectedItem) { _, id in savedItem = id.map(Int.init) ?? 0 }
+    .onChange(of: selectedColumn, initial: true) { _, column in compactColumn = column }
+    .onChange(of: compactColumn) { _, column in
+      // Back to a column before the one selected: clear what's after it.
+      guard stacked, column.depth < selectedColumn.depth else { return }
+      if column.depth < NavigationSplitViewColumn.detail.depth { selectedItem = nil }
+      if column.depth < NavigationSplitViewColumn.content.depth { store.source = nil }
+    }
     .task {
       if store.isLocked { await store.unlock() }
       if store.isConfigured {
@@ -244,6 +262,17 @@ struct LockView: View {
         Button("Unlock") { Task { await store.unlock() } }
           .buttonStyle(.glassProminent)
       }
+    }
+  }
+}
+
+extension NavigationSplitViewColumn {
+  /// Feeds, then items, then the article.
+  fileprivate var depth: Int {
+    switch self {
+    case .sidebar: 0
+    case .content: 1
+    default: 2
     }
   }
 }

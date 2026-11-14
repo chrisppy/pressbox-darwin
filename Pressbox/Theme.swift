@@ -21,12 +21,10 @@ enum Theme {
   static let error = Color("BrightOrange")
   /// base0A: stars.
   static let star = Color("Brass")
-  /// base0B: the read/unread swipe action.
+  /// base0B: a server that's connected, in Settings.
   static let read = Color("CamdenGreen")
   /// base0D: links in articles.
   static let link = Color("WarehouseOrange")
-  /// The accent (Orioles orange): the Up Next swipe action.
-  static let upNext = Color.accentColor
 
   /// CSS custom properties for the article page, light and dark: `--text`,
   /// `--muted` and `--link`. The page background stays transparent so the

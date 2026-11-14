@@ -15,6 +15,12 @@ The app is versioned on its own; it talks to pressbox servers through API v1
 
 ## [26.0.0] - Unreleased
 
+- The feed list and the item lists are grids of tiles rather than lists: as
+  many columns as fit, two or three on iPhone and more on iPad and Mac. A feed's
+  tile shows its artwork and unread count; an item's shows the episode's artwork
+  (else the feed's), with playing, downloaded and starred on it. Touch and hold
+  (or right-click on Mac) an item for Mark as Read, Star and Up Next, which were
+  its swipes.
 - Buttons, menu items, toggles, pickers and section headers use title-style
   capitalization, as the Human Interface Guidelines ask: Mark All as Read,
   Refresh Feeds, Forget This Device, Download New Episodes, 15 Seconds and so

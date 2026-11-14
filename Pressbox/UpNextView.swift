@@ -47,7 +47,7 @@ struct UpNextView: View {
           ContentUnavailableView(
             "Up Next is empty", systemImage: NowPlayingView.upNextSymbol,
             description: Text(
-              "Swipe an episode in a list, or use Add to Up Next in its bottom bar, to queue it."))
+              "Touch and hold an episode in a list, or use Add to Up Next in its bottom bar, to queue it."))
         }
       }
       .navigationTitle("Up Next")

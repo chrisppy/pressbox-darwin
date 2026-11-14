@@ -220,7 +220,7 @@ struct UpNextView: View {
         Text(snapshot.hasQueue ? "Up Next is empty" : "Nothing playing")
           .font(.headline)
         if snapshot.hasQueue {
-          Text("Swipe an episode to add it.")
+          Text("Touch and hold an episode to add it.")
             .font(.caption)
             .foregroundStyle(Color("MutedText"))
             .multilineTextAlignment(.center)

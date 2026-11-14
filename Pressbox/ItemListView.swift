@@ -365,9 +365,11 @@ struct ItemTile: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      TileArtwork(url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text")
-        .opacity(item.read ? 0.6 : 1)
-        .overlay(alignment: .bottomLeading) { status }
+      TileArtwork(
+        url: artwork, symbol: item.isEpisode ? "waveform" : "doc.text", title: item.title
+      )
+      .opacity(item.read ? 0.6 : 1)
+      .overlay(alignment: .topTrailing) { status }
       HStack(spacing: 6) {
         Circle()
           .fill(item.read ? .clear : Color.accentColor)
@@ -381,17 +383,21 @@ struct ItemTile: View {
       }
       .font(.caption)
       .foregroundStyle(.secondary)
-      Text(item.title)
-        .font(.subheadline.weight(item.read ? .regular : .semibold))
-        .foregroundStyle(item.read ? .secondary : .primary)
-        .lineLimit(3, reservesSpace: true)
-        .multilineTextAlignment(.leading)
+      // The artwork's own tile has the title when there's no artwork.
+      if artwork != nil {
+        Text(item.title)
+          .font(.subheadline.weight(item.read ? .regular : .semibold))
+          .foregroundStyle(item.read ? .secondary : .primary)
+          .lineLimit(3, reservesSpace: true)
+          .multilineTextAlignment(.leading)
+      }
     }
     .contentShape(.rect)
     .accessibilityElement(children: .combine)
   }
 
-  /// Playing, downloaded and starred, on glass over the artwork's corner.
+  /// Playing, downloaded and starred, on glass in the artwork's top corner,
+  /// clear of a title in the tile.
   @ViewBuilder private var status: some View {
     let download = Downloads.shared.state(item.id)
     let downloaded: Bool = {

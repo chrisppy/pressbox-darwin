@@ -162,14 +162,18 @@ private struct TileLabel: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      TileArtwork(url: image, symbol: symbol, tint: tint)
+      TileArtwork(url: image, symbol: symbol, tint: tint, title: title)
         .overlay(alignment: .topTrailing) { TileBadge(count: count) }
-      HStack(alignment: .firstTextBaseline, spacing: 4) {
-        if let error {
-          Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundStyle(Theme.error)
-            .accessibilityLabel("Last fetch failed: \(error)")
+        .overlay(alignment: .bottomTrailing) {
+          if let error {
+            Image(systemName: "exclamationmark.triangle.fill")
+              .foregroundStyle(Theme.error)
+              .padding(8)
+              .accessibilityLabel("Last fetch failed: \(error)")
+          }
         }
+      // The artwork's own tile has the title when there's no artwork.
+      if image != nil {
         Text(title)
           .font(.subheadline)
           .lineLimit(2, reservesSpace: true)

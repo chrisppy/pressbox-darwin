@@ -9,44 +9,63 @@ import SwiftUI
 
 enum Tiles {
   /// Feeds, tags, All and Starred.
-  static let sources = [GridItem(.adaptive(minimum: 104, maximum: 180), spacing: 12)]
+  /// Top-aligned: a tile with its title inside is shorter than one with the
+  /// title under its artwork.
+  static let sources = [
+    GridItem(.adaptive(minimum: 104, maximum: 180), spacing: 12, alignment: .top)
+  ]
   /// Articles and episodes.
-  static let items = [GridItem(.adaptive(minimum: 160, maximum: 280), spacing: 12)]
+  static let items = [
+    GridItem(.adaptive(minimum: 160, maximum: 280), spacing: 12, alignment: .top)
+  ]
   static let spacing: CGFloat = 12
   static let cornerRadius: CGFloat = 14
 }
 
-/// Square artwork from a URL, or a symbol on a plain tile when there is
-/// none or it hasn't loaded.
+/// Square artwork from a URL. With none, or until it loads (or if it
+/// can't), the tile shows the title itself, under a symbol.
 struct TileArtwork: View {
   let url: URL?
   let symbol: String
   var tint: Color = .secondary
+  let title: String
 
   var body: some View {
     Color.clear
       .aspectRatio(1, contentMode: .fit)
       .overlay {
         if let url {
-          AsyncImage(url: url) { image in
-            image.resizable().scaledToFill()
-          } placeholder: {
-            placeholder
+          AsyncImage(url: url) { phase in
+            if let image = phase.image {
+              image.resizable().scaledToFill().accessibilityHidden(true)
+            } else {
+              titleTile
+            }
           }
         } else {
-          placeholder
+          titleTile
         }
       }
       .clipShape(RoundedRectangle(cornerRadius: Tiles.cornerRadius))
-      .accessibilityHidden(true)
   }
 
-  private var placeholder: some View {
-    Image(systemName: symbol)
-      .font(.largeTitle)
-      .foregroundStyle(tint)
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(.quaternary)
+  private var titleTile: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Image(systemName: symbol)
+        .font(.title3)
+        .foregroundStyle(tint)
+        .accessibilityHidden(true)
+      Spacer(minLength: 0)
+      Text(title)
+        .font(.headline)
+        .foregroundStyle(.primary)
+        .lineLimit(4)
+        .minimumScaleFactor(0.75)
+        .multilineTextAlignment(.leading)
+    }
+    .padding(10)
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    .background(.quaternary)
   }
 }
 

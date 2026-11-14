@@ -21,6 +21,9 @@ The app is versioned on its own; it talks to pressbox servers through API v1
   (else the feed's), with playing, downloaded and starred on it. Touch and hold
   (or right-click on Mac) an item for Mark as Read, Star and Up Next, which were
   its swipes.
+- Mark All as Read is in a More (⋯) menu at the top of an item list, rather
+  than a button of its own, so it's harder to tap by mistake. It still asks
+  first.
 - Artwork at a plain http address off the local network is asked for over https,
   which App Transport Security allows, rather than not loading at all.
 - Buttons, menu items, toggles, pickers and section headers use title-style

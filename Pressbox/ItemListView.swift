@@ -145,23 +145,26 @@ struct ItemListView: View {
         kindToggles(store)
       }
     }
-    // Up top, away from the thumb, and asking first. Undo is only there for
-    // a few seconds after.
+    // Up top, away from the thumb, in More so it takes two taps, and asking
+    // first. Undo is only there for a few seconds after.
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
-        Button("Mark All as Read", systemImage: "checkmark") { confirmMarkAll = true }
-          .disabled(markAllCount == 0)
-          // On the button, so the action sheet comes from it.
-          .confirmationDialog(
-            markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
-          ) {
-            Button("Mark \(markAllCount) as Read", role: .destructive) {
-              store.haptic(.done)
-              Task { await store.markAllRead() }
-            }
-          } message: {
-            Text("You can undo it for a few seconds after.")
+        Menu("More", systemImage: "ellipsis") {
+          Button("Mark All as Read", systemImage: "checkmark") { confirmMarkAll = true }
+            .disabled(markAllCount == 0)
+        }
+        // On the menu, so the action sheet comes from it: the menu has
+        // closed by the time the dialog shows.
+        .confirmationDialog(
+          markAllTitle, isPresented: $confirmMarkAll, titleVisibility: .visible
+        ) {
+          Button("Mark \(markAllCount) as Read", role: .destructive) {
+            store.haptic(.done)
+            Task { await store.markAllRead() }
           }
+        } message: {
+          Text("You can undo it for a few seconds after.")
+        }
       }
     }
   }

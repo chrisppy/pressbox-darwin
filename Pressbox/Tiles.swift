@@ -24,11 +24,10 @@ enum Tiles {
 
 /// A square tile with its text on it: the artwork with the text over a
 /// shade at the bottom, or, with no artwork (until it loads, or if it
-/// can't), a plain tile with a large symbol over the text.
+/// can't), an orange tile with a large symbol over the text.
 struct TileArtwork: View {
   let url: URL?
   let symbol: String
-  var tint: Color = .secondary
   let title: String
   /// A line above the title: an item's feed and age.
   var detail: Text?
@@ -60,7 +59,7 @@ struct TileArtwork: View {
   /// White text over the artwork, on a shade that darkens toward the
   /// bottom so it reads on any picture.
   private var shadedText: some View {
-    text(titleFont: .subheadline, lines: 3)
+    text(titleFont: .subheadline, lines: 3, dot: .accentColor)
       .foregroundStyle(.white)
       .padding(.top, 24)
       .background(
@@ -70,28 +69,30 @@ struct TileArtwork: View {
   }
 
   /// The symbol large in the middle, as the tile's picture, and the text
-  /// under it.
+  /// under it, in white on the accent through glass, as the bottom bar's
+  /// selected controls have it.
   private var plainTile: some View {
     VStack(spacing: 0) {
       Spacer(minLength: 6)
       Image(systemName: symbol)
         .font(.system(size: 34))
-        .foregroundStyle(tint)
         .accessibilityHidden(true)
       Spacer(minLength: 4)
-      text(titleFont: .subheadline, lines: 2)
+      text(titleFont: .subheadline, lines: 2, dot: .white)
     }
+    .foregroundStyle(.white)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(.quaternary)
+    .glassEffect(
+      .regular.tint(.accentColor), in: .rect(cornerRadius: Tiles.cornerRadius))
   }
 
-  private func text(titleFont: Font, lines: Int) -> some View {
+  private func text(titleFont: Font, lines: Int, dot: Color) -> some View {
     VStack(alignment: .leading, spacing: 2) {
       if let detail {
         HStack(spacing: 4) {
           if unread {
             Circle()
-              .fill(Color.accentColor)
+              .fill(dot)
               .frame(width: 7, height: 7)
               .accessibilityLabel("Unread")
           }
@@ -116,15 +117,24 @@ struct TileArtwork: View {
 /// since the accent painted flat reads as red.
 struct TileBadge: View {
   let count: Int
+  /// On an orange tile: white, with the count in orange, so it stands out.
+  var onOrange = false
 
   var body: some View {
     if count > 0 {
       Text(count, format: .number)
         .font(.caption.bold().monospacedDigit())
-        .foregroundStyle(.white)
+        .foregroundStyle(onOrange ? Color.accentColor : .white)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .glassEffect(.regular.tint(.accentColor), in: .capsule)
+        .background {
+          if onOrange {
+            Capsule().fill(.white)
+          } else {
+            Capsule().fill(.clear)
+              .glassEffect(.regular.tint(.accentColor), in: .capsule)
+          }
+        }
         .padding(6)
     }
   }

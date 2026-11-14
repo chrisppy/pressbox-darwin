@@ -15,13 +15,13 @@ struct FeedListView: View {
           SourceTile(
             title: store.title(for: .all), symbol: "tray.full",
             unread: store.unread(in: .all), source: .all)
-          SourceTile(title: "Starred", symbol: "star.fill", tint: Theme.star, source: .starred)
+          SourceTile(title: "Starred", symbol: "star.fill", source: .starred)
           if store.hasQueue {
             Button {
               showUpNext = true
             } label: {
               TileLabel(
-                title: "Up Next", symbol: NowPlayingView.upNextSymbol, tint: .accentColor,
+                title: "Up Next", symbol: NowPlayingView.upNextSymbol,
                 count: store.queue.count)
             }
             .buttonStyle(.plain)
@@ -114,18 +114,16 @@ private struct SourceTile: View {
   @Environment(Store.self) private var store
   let title: String
   var symbol = "dot.radiowaves.up.forward"
-  var tint: Color = .secondary
   var image: URL?
   var unread = 0
   var error: String?
   let source: Source
 
   init(
-    title: String, symbol: String, tint: Color = .secondary, unread: Int = 0, source: Source
+    title: String, symbol: String, unread: Int = 0, source: Source
   ) {
     self.title = title
     self.symbol = symbol
-    self.tint = tint
     self.unread = unread
     self.source = source
   }
@@ -145,7 +143,7 @@ private struct SourceTile: View {
       store.source = source
     } label: {
       TileLabel(
-        title: title, symbol: symbol, tint: tint, image: image, count: unread, error: error)
+        title: title, symbol: symbol, image: image, count: unread, error: error)
     }
     .buttonStyle(.plain)
     .tileSelected(store.source == source)
@@ -156,14 +154,13 @@ private struct SourceTile: View {
 private struct TileLabel: View {
   let title: String
   let symbol: String
-  var tint: Color = .secondary
   var image: URL?
   var count = 0
   var error: String?
 
   var body: some View {
-    TileArtwork(url: image, symbol: symbol, tint: tint, title: title)
-      .overlay(alignment: .topTrailing) { TileBadge(count: count) }
+    TileArtwork(url: image, symbol: symbol, title: title)
+      .overlay(alignment: .topTrailing) { TileBadge(count: count, onOrange: image == nil) }
       .overlay(alignment: .topLeading) {
         if let error {
           Image(systemName: "exclamationmark.triangle.fill")
